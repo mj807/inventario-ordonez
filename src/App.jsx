@@ -1,217 +1,220 @@
-
 import React, { useState, useEffect } from "react";
 import "./index.css";
-import "./i18n";
-import { useTranslation } from "react-i18next";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function App() {
-  const { t, i18n } = useTranslation();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [password, setPassword] = useState("");
-  const [inventory, setInventory] = useState([]);
-  const [product, setProduct] = useState("");
-  const [weight, setWeight] = useState("");
-  const [location, setLocation] = useState("Cooler General");
+// Idiomas
+const texts = {
+  en: {
+    title: "Ordoñez Butcher Shop Inventory",
+    loginTitle: "Administrator Login",
+    username: "Username",
+    password: "Password",
+    login: "Login",
+    logout: "Logout",
+    addItem: "Add Item",
+    meatType: "Meat Type",
+    weight: "Weight (lb)",
+    date: "Date",
+    location: "Location",
+    save: "Save",
+    noData: "No items in inventory yet.",
+  },
+  es: {
+    title: "Inventario Ordoñez Butcher Shop",
+    loginTitle: "Ingreso de Administrador",
+    username: "Usuario",
+    password: "Contraseña",
+    login: "Ingresar",
+    logout: "Cerrar sesión",
+    addItem: "Agregar Producto",
+    meatType: "Tipo de Carne",
+    weight: "Peso (lb)",
+    date: "Fecha",
+    location: "Ubicación",
+    save: "Guardar",
+    noData: "No hay productos en el inventario.",
+  },
+};
 
+// Datos de acceso (seguridad básica)
+const ADMIN_USER = "admin";
+const ADMIN_PASS = "Morchione0506@";
+
+export default function App() {
+  const [language, setLanguage] = useState("en");
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [form, setForm] = useState({
+    type: "",
+    weight: "",
+    date: "",
+    location: "",
+  });
+  const [inventory, setInventory] = useState([]);
+
+  // Cargar inventario guardado
   useEffect(() => {
-    const savedData = JSON.parse(localStorage.getItem("inventory")) || [];
-    setInventory(savedData);
+    const stored = localStorage.getItem("inventory");
+    if (stored) setInventory(JSON.parse(stored));
   }, []);
 
-  const handleLogin = () => {
-    if (password === "Morchione0506@") {
-      setIsLoggedIn(true);
-      toast.success("✅ Access Granted");
+  // Guardar cambios
+  useEffect(() => {
+    localStorage.setItem("inventory", JSON.stringify(inventory));
+  }, [inventory]);
+
+  // Login
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const user = e.target.user.value;
+    const pass = e.target.pass.value;
+
+    if (user === ADMIN_USER && pass === ADMIN_PASS) {
+      setLoggedIn(true);
+      toast.success("✅ Login successful!");
     } else {
-      toast.error(t("errorPass"));
+      toast.error("❌ Invalid credentials!");
     }
   };
 
-  const handleAddItem = () => {
-    if (!product || !weight) return;
-    const newItem = {
-      id: Date.now(),
-      product,
-      weight,
-      location,
-      date: new Date().toLocaleString(),
-    };
-    const updated = [...inventory, newItem];
-    setInventory(updated);
-    localStorage.setItem("inventory", JSON.stringify(updated));
-    setProduct("");
-    setWeight("");
-    toast.success(t("successAdd"));
+  // Guardar producto
+  const handleSave = (e) => {
+    e.preventDefault();
+    if (!form.type || !form.weight || !form.date || !form.location) {
+      toast.warning("⚠️ Please fill all fields!");
+      return;
+    }
+    const newItem = { ...form, id: Date.now() };
+    setInventory([...inventory, newItem]);
+    setForm({ type: "", weight: "", date: "", location: "" });
+    toast.success("✅ Saved successfully!");
   };
 
-  const handleDelete = (id) => {
-    const updated = inventory.filter((item) => item.id !== id);
-    setInventory(updated);
-    localStorage.setItem("inventory", JSON.stringify(updated));
+  // Cerrar sesión
+  const handleLogout = () => {
+    setLoggedIn(false);
   };
 
-  const handleBackup = () => {
-    const blob = new Blob([JSON.stringify(inventory, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `inventario_backup_${new Date()
-      .toISOString()
-      .slice(0, 19)}.json`;
-    a.click();
-  };
-
-  const handleRestore = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const data = JSON.parse(evt.target.result);
-      setInventory(data);
-      localStorage.setItem("inventory", JSON.stringify(data));
-      toast.info("📦 Datos restaurados");
-    };
-    reader.readAsText(file);
-  };
-
-  const changeLanguage = () => {
-    const newLang = i18n.language === "en" ? "es" : "en";
-    i18n.changeLanguage(newLang);
-    localStorage.setItem("lang", newLang);
-  };
-
-  if (!isLoggedIn) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-dark text-gray-100">
-        <h1 className="text-3xl font-bold mb-6">{t("login")}</h1>
-        <input
-          type="password"
-          placeholder={t("password")}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="px-4 py-2 rounded bg-gray-800 text-white mb-3 border border-gray-600"
-        />
-        <button
-          onClick={handleLogin}
-          className="bg-primary hover:bg-blue-700 px-4 py-2 rounded"
-        >
-          {t("access")}
-        </button>
-        <ToastContainer position="bottom-center" theme="dark" />
-      </div>
-    );
-  }
+  const t = texts[language];
 
   return (
-    <div className="min-h-screen bg-dark text-gray-100 p-6">
-      <header className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">{t("title")}</h1>
-        <div className="flex gap-2">
-          <button
-            onClick={changeLanguage}
-            className="bg-primary px-3 py-1 rounded"
-          >
-            🌐 {t("language")}
-          </button>
-          <button
-            onClick={() => setIsLoggedIn(false)}
-            className="bg-red-600 px-3 py-1 rounded"
-          >
-            {t("logout")}
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-900 to-gray-900 text-white p-4">
+      <ToastContainer position="top-center" />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <input
-          type="text"
-          placeholder={t("product")}
-          value={product}
-          onChange={(e) => setProduct(e.target.value)}
-          className="p-2 rounded bg-gray-800 text-white"
-        />
-        <input
-          type="number"
-          placeholder={t("weight")}
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
-          className="p-2 rounded bg-gray-800 text-white"
-        />
+      {/* Selector de idioma */}
+      <div className="absolute top-4 right-4">
         <select
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          className="p-2 rounded bg-gray-800 text-white"
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+          className="bg-gray-800 text-white border border-gray-500 rounded px-2 py-1"
         >
-          <option>Cooler General</option>
-          <option>128 Erie St S</option>
-          <option>10 Mill St W</option>
+          <option value="en">🇺🇸 EN</option>
+          <option value="es">🇪🇸 ES</option>
         </select>
       </div>
 
-      <button
-        onClick={handleAddItem}
-        className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded mb-6"
-      >
-        {t("addItem")}
-      </button>
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border border-gray-700">
-          <thead className="bg-gray-800 text-gray-300">
-            <tr>
-              <th className="p-2">#</th>
-              <th className="p-2">{t("product")}</th>
-              <th className="p-2">{t("weight")}</th>
-              <th className="p-2">{t("location")}</th>
-              <th className="p-2">Fecha</th>
-              <th className="p-2">{t("delete")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {inventory.map((item, index) => (
-              <tr key={item.id} className="border-t border-gray-700">
-                <td className="p-2">{index + 1}</td>
-                <td className="p-2">{item.product}</td>
-                <td className="p-2">{item.weight}</td>
-                <td className="p-2">{item.location}</td>
-                <td className="p-2">{item.date}</td>
-                <td className="p-2">
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded"
-                  >
-                    X
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex gap-3 mt-6">
-        <button
-          onClick={handleBackup}
-          className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
+      {/* Login */}
+      {!loggedIn ? (
+        <form
+          onSubmit={handleLogin}
+          className="bg-white/10 p-6 rounded-2xl shadow-xl w-80 text-center"
         >
-          {t("backup")}
-        </button>
-        <label className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded cursor-pointer">
-          {t("restore")}
+          <h2 className="text-2xl mb-4 font-bold">{t.loginTitle}</h2>
           <input
-            type="file"
-            accept=".json"
-            onChange={handleRestore}
-            className="hidden"
+            name="user"
+            placeholder={t.username}
+            className="w-full mb-3 px-3 py-2 rounded text-black"
           />
-        </label>
-      </div>
+          <input
+            name="pass"
+            type="password"
+            placeholder={t.password}
+            className="w-full mb-4 px-3 py-2 rounded text-black"
+          />
+          <button
+            type="submit"
+            className="bg-red-700 hover:bg-red-800 px-4 py-2 rounded font-semibold w-full"
+          >
+            {t.login}
+          </button>
+        </form>
+      ) : (
+        <div className="w-full max-w-3xl text-center">
+          <h1 className="text-3xl font-bold mb-4">{t.title}</h1>
+          <button
+            onClick={handleLogout}
+            className="absolute top-4 left-4 bg-gray-700 hover:bg-gray-800 px-3 py-1 rounded"
+          >
+            {t.logout}
+          </button>
 
-      <ToastContainer position="bottom-center" theme="dark" />
+          {/* Formulario */}
+          <form
+            onSubmit={handleSave}
+            className="bg-white/10 p-4 rounded-2xl shadow-lg mb-6 flex flex-wrap gap-2 justify-center"
+          >
+            <input
+              type="text"
+              placeholder={t.meatType}
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value })}
+              className="px-3 py-2 rounded text-black"
+            />
+            <input
+              type="number"
+              placeholder={t.weight}
+              value={form.weight}
+              onChange={(e) => setForm({ ...form, weight: e.target.value })}
+              className="px-3 py-2 rounded text-black"
+            />
+            <input
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              className="px-3 py-2 rounded text-black"
+            />
+            <input
+              type="text"
+              placeholder={t.location}
+              value={form.location}
+              onChange={(e) => setForm({ ...form, location: e.target.value })}
+              className="px-3 py-2 rounded text-black"
+            />
+            <button
+              type="submit"
+              className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold"
+            >
+              {t.save}
+            </button>
+          </form>
+
+          {/* Tabla de inventario */}
+          {inventory.length === 0 ? (
+            <p className="opacity-80">{t.noData}</p>
+          ) : (
+            <table className="w-full bg-white/10 rounded-xl overflow-hidden">
+              <thead className="bg-red-800">
+                <tr>
+                  <th className="p-2">{t.meatType}</th>
+                  <th className="p-2">{t.weight}</th>
+                  <th className="p-2">{t.date}</th>
+                  <th className="p-2">{t.location}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inventory.map((item) => (
+                  <tr key={item.id} className="border-b border-gray-700">
+                    <td className="p-2">{item.type}</td>
+                    <td className="p-2">{item.weight}</td>
+                    <td className="p-2">{item.date}</td>
+                    <td className="p-2">{item.location}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
     </div>
   );
 }
