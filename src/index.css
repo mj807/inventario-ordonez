@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-dark text-gray-100 font-sans;
+}
+
+button {
+  @apply rounded-lg px-3 py-2 font-medium transition-all;
+}
