@@ -3,17 +3,15 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  root: ".", // asegura que Vite busque en la raíz
+  root: ".", // base del proyecto
+  base: "./", // 👈 clave para que Vercel sirva los assets correctamente
   build: {
-    outDir: "dist", // salida estándar para Vercel
-  },
-  resolve: {
-    alias: {
-      "@": "/src",
-    },
+    outDir: "dist", // salida para producción
+    emptyOutDir: true,
   },
   server: {
     host: true,
+    port: 5173,
   },
 });
 
