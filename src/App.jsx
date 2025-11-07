@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import "./index.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -30,6 +30,15 @@ const texts = {
     weight: "Weight (lb)",
     date: "Date",
     location: "Location",
+    batchNumber: "Batch Number",
+    currentBatch: "Current Batch",
+    startNewBatch: "Start New Batch",
+    addToBatch: "Add to Batch",
+    batchItems: "Items in this batch",
+    confirmBatch: "Finish Batch",
+    batchFinished: "Batch finished successfully!",
+    loadingProducts: "Loading products...",
+    totalWeight: "Total Weight",
     save: "Save",
     noData: "No items in inventory yet.",
     enter: "Enter",
@@ -54,6 +63,9 @@ const texts = {
     plantWeight: "Plant Weight (Helen)",
     coolerWeight: "Actual Cooler Weight",
     productInfo: "Product Information",
+    notifyRoberto: "📱 Notify Roberto (Arrival at 501)",
+    notifyRobertoDesc: "Send WhatsApp message to Roberto",
+    whatsappSent: "✅ WhatsApp message sent!",
     // Menu buttons
     inventoryEntry: "Inventory Entry",
     inventoryEntryDesc: "Add new products",
@@ -80,6 +92,15 @@ const texts = {
     weight: "Peso (lb)",
     date: "Fecha",
     location: "Ubicación",
+    batchNumber: "Número de Lote",
+    currentBatch: "Lote Actual",
+    startNewBatch: "Iniciar Nuevo Lote",
+    addToBatch: "Agregar al Lote",
+    batchItems: "Productos en este lote",
+    confirmBatch: "Finalizar Lote",
+    batchFinished: "¡Lote finalizado exitosamente!",
+    loadingProducts: "Cargando productos...",
+    totalWeight: "Peso Total",
     save: "Guardar",
     noData: "No hay productos en el inventario.",
     enter: "Entrar",
@@ -104,6 +125,9 @@ const texts = {
     plantWeight: "Peso Planta (Helen)",
     coolerWeight: "Peso Real en Cooler",
     productInfo: "Información del Producto",
+    notifyRoberto: "📱 Avisar a Roberto (Llegada a 501)",
+    notifyRobertoDesc: "Enviar mensaje de WhatsApp a Roberto",
+    whatsappSent: "✅ ¡Mensaje de WhatsApp enviado!",
     // Menu buttons
     inventoryEntry: "Ingreso de Inventario",
     inventoryEntryDesc: "Agregar nuevos productos",
@@ -165,6 +189,9 @@ const MEAT_TYPES_EN = [
   "Pork - Part 2",
 ];
 
+// Número de WhatsApp de Roberto (Central 501)
+const ROBERTO_WHATSAPP = "15198189446";
+
 const COOLER = {
   id: "cooler-1",
   name: "Cooler Principal",
@@ -205,6 +232,9 @@ export default function App() {
     date: "",
     location: COOLER.name,
   });
+  const [currentBatch, setCurrentBatch] = useState(""); // Número de lote actual
+  const [batchItems, setBatchItems] = useState([]); // Items del lote actual (solo IDs)
+  const [finishedBatches, setFinishedBatches] = useState([]); // Lotes finalizados pendientes de enviar
   const [inventory, setInventory] = useState([]);
   const [qrItem, setQrItem] = useState(null);
   const [qrDataUrl, setQrDataUrl] = useState("");
@@ -307,6 +337,42 @@ export default function App() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
     }
   }, [inventory]);
+
+  // Generar número de lote automático cuando se abre la pantalla de ingreso
+  useEffect(() => {
+    if (currentScreen === "ingreso" && userRole === "plant" && !currentBatch) {
+      // Generar número de lote: YYYYMMDD-001
+      const today = new Date();
+      const dateStr = today.toISOString().split("T")[0].replace(/-/g, ""); // YYYYMMDD
+
+      // Buscar si ya hay lotes de hoy
+      const todayBatches = inventory.filter(
+        (item) => item.batchNumber && item.batchNumber.startsWith(dateStr)
+      );
+
+      // Obtener el siguiente número
+      let maxNum = 0;
+      todayBatches.forEach((item) => {
+        const parts = item.batchNumber.split("-");
+        if (parts.length === 2) {
+          const num = parseInt(parts[1]);
+          if (num > maxNum) maxNum = num;
+        }
+      });
+
+      const nextNum = (maxNum + 1).toString().padStart(3, "0");
+      const newBatch = `${dateStr}-${nextNum}`;
+
+      setCurrentBatch(newBatch);
+      setBatchItems([]);
+
+      toast.success(
+        language === "es"
+          ? `📦 Lote ${newBatch} iniciado`
+          : `📦 Batch ${newBatch} started`
+      );
+    }
+  }, [currentScreen, userRole, currentBatch, inventory, language]);
 
   // Calcular datos agrupados usando useMemo para mejor rendimiento
   const sortedGroups = useMemo(() => {
@@ -881,6 +947,16 @@ export default function App() {
       return;
     }
 
+    if (!currentBatch) {
+      toast.warning(
+        "⚠️ " +
+          (language === "es"
+            ? "Debes iniciar un lote primero"
+            : "You must start a batch first")
+      );
+      return;
+    }
+
     if (userRole !== "plant" && userRole !== "admin") {
       toast.error(
         language === "es"
@@ -896,12 +972,14 @@ export default function App() {
       weight: Number(form.weight),
       date: form.date,
       location: COOLER.name,
+      batchNumber: currentBatch, // Agregar número de lote
       status: "plant_received", // primera etapa
       history: [
         {
           at: new Date().toISOString(),
           action: "plant_received",
           by: userRole,
+          batch: currentBatch,
         },
       ],
       createdAt: new Date().toISOString(),
@@ -909,6 +987,9 @@ export default function App() {
 
     // Agregar al inventario local inmediatamente para feedback instantáneo
     setInventory((prev) => [item, ...prev]);
+
+    // Agregar al lote actual
+    setBatchItems((prev) => [...prev, item.id]);
 
     try {
       // Intentar guardar en Firebase
@@ -1384,7 +1465,9 @@ export default function App() {
           {(userRole === "plant" || userRole === "admin") && (
             <button
               onClick={() => setCurrentScreen("ingreso")}
-              className="group relative bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
+              className={`group relative bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20 ${
+                finishedBatches.length === 0 ? "col-span-2" : ""
+              }`}
             >
               <div className="flex items-center justify-center gap-3">
                 <span className="text-3xl">🥩</span>
@@ -1396,21 +1479,76 @@ export default function App() {
             </button>
           )}
 
-          {/* Descarga / Llegada a 501 (Cooler/Admin - NO plant porque Helen solo adiciona) */}
-          {(userRole === "cooler" || userRole === "admin") && (
-            <button
-              onClick={() => setCurrentScreen("descarga")}
-              className="group relative bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-3xl">📥</span>
-                <span className="text-base font-bold">{t.facilityArrival}</span>
-              </div>
-              <div className="text-xs text-white/80 mt-1 text-center">
-                {t.facilityArrivalDesc}
-              </div>
-            </button>
-          )}
+          {/* Avisar a Roberto (Solo si hay lotes finalizados) */}
+          {(userRole === "plant" || userRole === "admin") &&
+            finishedBatches.length > 0 && (
+              <button
+                onClick={() => {
+                  // Crear mensaje con todos los lotes finalizados
+                  const batchesSummary = finishedBatches
+                    .map((batch) => {
+                      const productSummary = batch.items
+                        .map(
+                          (item, idx) =>
+                            `${idx + 1}. ${item.type} - ${item.weight} lb`
+                        )
+                        .join("\n");
+
+                      return `📦 *Lote: ${batch.batchNumber}*\n🥩 *Productos (${
+                        batch.items.length
+                      }):*\n${productSummary}\n⚖️ *Peso: ${batch.totalWeight.toFixed(
+                        2
+                      )} lb*`;
+                    })
+                    .join("\n\n");
+
+                  const totalWeightAllBatches = finishedBatches.reduce(
+                    (sum, batch) => sum + batch.totalWeight,
+                    0
+                  );
+
+                  const message = encodeURIComponent(
+                    language === "es"
+                      ? `Hola Roberto, ya estoy en la 501 Mersea Rd 5 esperando a ser descargada.\n\n${batchesSummary}\n\n🔢 *Total de Lotes: ${
+                          finishedBatches.length
+                        }*\n⚖️ *Peso Total General: ${totalWeightAllBatches.toFixed(
+                          2
+                        )} lb*\n\n- Helen`
+                      : `Hi Roberto, I'm at 501 Mersea Rd 5 waiting to be unloaded.\n\n${batchesSummary}\n\n🔢 *Total Batches: ${
+                          finishedBatches.length
+                        }*\n⚖️ *Total Weight: ${totalWeightAllBatches.toFixed(
+                          2
+                        )} lb*\n\n- Helen`
+                  );
+
+                  window.open(
+                    `https://wa.me/${ROBERTO_WHATSAPP}?text=${message}`,
+                    "_blank"
+                  );
+
+                  toast.success(t.whatsappSent);
+
+                  // Limpiar lotes finalizados después de enviar
+                  setFinishedBatches([]);
+                }}
+                className="group relative bg-gradient-to-br from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-3xl">📱</span>
+                  <span className="text-base font-bold">{t.notifyRoberto}</span>
+                </div>
+                <div className="text-xs text-white/80 mt-1 text-center">
+                  {finishedBatches.length}{" "}
+                  {language === "es"
+                    ? finishedBatches.length === 1
+                      ? "lote listo"
+                      : "lotes listos"
+                    : finishedBatches.length === 1
+                    ? "batch ready"
+                    : "batches ready"}
+                </div>
+              </button>
+            )}
 
           {/* Ingreso a Cooler (Cooler) */}
           {(userRole === "cooler" || userRole === "admin") && (
@@ -1508,67 +1646,170 @@ export default function App() {
       </div>
 
       {/* Formulario de ingreso */}
-      <form
-        onSubmit={addItem}
-        className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-6 w-full max-w-3xl space-y-4"
-      >
-        <div>
-          <label className="block text-sm font-medium mb-2">{t.meatType}</label>
-          <select
-            value={form.type}
-            onChange={(e) => setForm({ ...form, type: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg text-black"
+      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-6 w-full max-w-3xl space-y-4">
+        {/* Sistema de Lotes - Automático */}
+        <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/30 space-y-3">
+          <h3 className="text-lg font-bold text-blue-300">{t.currentBatch}</h3>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-bold text-2xl text-green-400">
+                  {currentBatch}
+                </div>
+                <div className="text-sm text-white/60">
+                  {language === "es" ? t.loadingProducts : t.loadingProducts}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Lista de productos cargados */}
+        {batchItems.length > 0 && (
+          <div className="bg-green-900/20 rounded-lg p-4 border border-green-500/30 space-y-3">
+            <h3 className="text-lg font-bold text-green-300">
+              {t.batchItems} ({batchItems.length})
+            </h3>
+            <div className="max-h-60 overflow-y-auto space-y-2">
+              {inventory
+                .filter((item) => batchItems.includes(item.id))
+                .map((item, idx) => (
+                  <div
+                    key={item.id}
+                    className="bg-white/10 rounded-lg p-3 flex justify-between items-center"
+                  >
+                    <div>
+                      <div className="font-semibold">
+                        {idx + 1}. {item.type}
+                      </div>
+                      <div className="text-sm text-white/60">{item.date}</div>
+                    </div>
+                    <div className="text-xl font-bold text-green-400">
+                      {item.weight} lb
+                    </div>
+                  </div>
+                ))}
+            </div>
+            <div className="border-t border-white/20 pt-3 mt-3">
+              <div className="flex justify-between items-center text-lg font-bold">
+                <span>{t.totalWeight}:</span>
+                <span className="text-2xl text-green-400">
+                  {inventory
+                    .filter((item) => batchItems.includes(item.id))
+                    .reduce((sum, item) => sum + item.weight, 0)
+                    .toFixed(2)}{" "}
+                  lb
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Formulario para agregar productos */}
+        {currentBatch && (
+          <form onSubmit={addItem} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                {t.meatType}
+              </label>
+              <select
+                value={form.type}
+                onChange={(e) => setForm({ ...form, type: e.target.value })}
+                className="w-full px-4 py-3 rounded-lg text-black"
+              >
+                <option value="">
+                  {language === "es" ? "Seleccionar tipo" : "Select type"}
+                </option>
+                {(language === "es" ? MEAT_TYPES_ES : MEAT_TYPES_EN).map(
+                  (m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  )
+                )}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                {t.weight}
+              </label>
+              <input
+                type="number"
+                placeholder={t.weight}
+                value={form.weight}
+                onChange={(e) => setForm({ ...form, weight: e.target.value })}
+                className="w-full px-4 py-3 rounded-lg text-black"
+                step="0.01"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">{t.date}</label>
+              <input
+                type="date"
+                value={form.date}
+                onChange={(e) => setForm({ ...form, date: e.target.value })}
+                className="w-full px-4 py-3 rounded-lg text-black"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                {t.location}
+              </label>
+              <input
+                type="text"
+                value={COOLER.name}
+                disabled
+                className="w-full px-4 py-3 rounded-lg text-black bg-gray-200"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-green-600 hover:bg-green-700 rounded-lg font-semibold py-3 text-lg"
+            >
+              {t.addToBatch}
+            </button>
+          </form>
+        )}
+
+        {/* Botón para finalizar lote (NO envía WhatsApp) */}
+        {currentBatch && batchItems.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              // Guardar lote como finalizado
+              const itemsInBatch = inventory.filter((item) =>
+                batchItems.includes(item.id)
+              );
+
+              const batchData = {
+                batchNumber: currentBatch,
+                items: itemsInBatch,
+                totalWeight: itemsInBatch.reduce(
+                  (sum, item) => sum + item.weight,
+                  0
+                ),
+                finishedAt: new Date().toISOString(),
+              };
+
+              setFinishedBatches((prev) => [...prev, batchData]);
+
+              toast.success(t.batchFinished);
+
+              // Limpiar lote actual para comenzar uno nuevo
+              setCurrentBatch("");
+              setBatchItems([]);
+            }}
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg text-lg flex items-center justify-center gap-3"
           >
-            <option value="">
-              {language === "es" ? "Seleccionar tipo" : "Select type"}
-            </option>
-            {(language === "es" ? MEAT_TYPES_ES : MEAT_TYPES_EN).map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">{t.weight}</label>
-          <input
-            type="number"
-            placeholder={t.weight}
-            value={form.weight}
-            onChange={(e) => setForm({ ...form, weight: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg text-black"
-            step="0.01"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">{t.date}</label>
-          <input
-            type="date"
-            value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-            className="w-full px-4 py-3 rounded-lg text-black"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">{t.location}</label>
-          <input
-            type="text"
-            value={COOLER.name}
-            disabled
-            className="w-full px-4 py-3 rounded-lg text-black bg-gray-200"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-green-600 hover:bg-green-700 rounded-lg font-semibold py-3 text-lg"
-        >
-          {t.save}
-        </button>
-      </form>
+            <span className="text-2xl">✅</span>
+            {t.confirmBatch}
+          </button>
+        )}
+      </div>
 
       {/* Modal QR - Mostrar después de guardar */}
       {qrItem && currentScreen === "ingreso" && (
