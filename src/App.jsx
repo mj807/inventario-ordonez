@@ -49,8 +49,11 @@ const texts = {
     deliveryButton: "Mark Delivery",
     coolerIntakeTitle: "Cooler Intake",
     coolerIntakeDesc:
-      "Enter the product code already marked as 'Delivery' to confirm it's physically inside the cooler.",
+      "Scan the product from Helen and enter the actual weight received at the cooler.",
     coolerIntakeButton: "Confirm Intake",
+    plantWeight: "Plant Weight (Helen)",
+    coolerWeight: "Actual Cooler Weight",
+    productInfo: "Product Information",
     // Menu buttons
     inventoryEntry: "Inventory Entry",
     inventoryEntryDesc: "Add new products",
@@ -96,8 +99,11 @@ const texts = {
     deliveryButton: "Marcar Descarga",
     coolerIntakeTitle: "Ingreso a Cooler",
     coolerIntakeDesc:
-      "Ingresa el código del producto que ya fue marcado como 'Descarga' para confirmar que está físicamente dentro del cooler.",
+      "Escanea el producto de Helen e ingresa el peso real recibido en el cooler.",
     coolerIntakeButton: "Confirmar Ingreso",
+    plantWeight: "Peso Planta (Helen)",
+    coolerWeight: "Peso Real en Cooler",
+    productInfo: "Información del Producto",
     // Menu buttons
     inventoryEntry: "Ingreso de Inventario",
     inventoryEntryDesc: "Agregar nuevos productos",
@@ -129,7 +135,7 @@ const CREDENTIALS = {
 };
 const STORAGE_KEY = "inventory";
 
-const MEAT_TYPES = [
+const MEAT_TYPES_ES = [
   "Brazuelo",
   "Pierna",
   "T-Bone",
@@ -142,6 +148,21 @@ const MEAT_TYPES = [
   "HangSteak",
   "Cerdo - Parte 1",
   "Cerdo - Parte 2",
+];
+
+const MEAT_TYPES_EN = [
+  "Shank",
+  "Leg",
+  "T-Bone",
+  "Rib Eye",
+  "Head",
+  "Liver",
+  "Tail",
+  "Tongue",
+  "Heart",
+  "HangSteak",
+  "Pork - Part 1",
+  "Pork - Part 2",
 ];
 
 const COOLER = {
@@ -193,6 +214,7 @@ export default function App() {
   const [deliverCameraOn, setDeliverCameraOn] = useState(false); // Cámara para descarga
   const [coolerIntakeCode, setCoolerIntakeCode] = useState(""); // para confirmar ingreso al cooler
   const [coolerIntakeCameraOn, setCoolerIntakeCameraOn] = useState(false); // Cámara para cooler intake
+  const [coolerIntakeWeight, setCoolerIntakeWeight] = useState(""); // Peso real en el cooler
   const [targetStore, setTargetStore] = useState("");
   const [receiveCode, setReceiveCode] = useState(""); // Para la recepción
   const [receiveCameraOn, setReceiveCameraOn] = useState(false); // Cámara para recepción
@@ -1249,6 +1271,14 @@ export default function App() {
       );
     }
 
+    if (!coolerIntakeWeight || Number(coolerIntakeWeight) <= 0) {
+      return toast.warning(
+        language === "es"
+          ? "Ingresa el peso real recibido en el cooler"
+          : "Enter the actual weight received at the cooler"
+      );
+    }
+
     if (userRole !== "cooler" && userRole !== "admin") {
       return toast.error(
         language === "es"
@@ -1274,10 +1304,18 @@ export default function App() {
 
     const updatedData = {
       status: "in_cooler",
+      weight: Number(coolerIntakeWeight), // Actualizar con el peso del cooler
+      plantWeight: item.weight, // Guardar el peso original de Helen
       coolerIntakeAt: new Date().toISOString(),
       history: [
         ...(item.history || []),
-        { at: new Date().toISOString(), action: "in_cooler", by: userRole },
+        {
+          at: new Date().toISOString(),
+          action: "in_cooler",
+          by: userRole,
+          plantWeight: item.weight,
+          coolerWeight: Number(coolerIntakeWeight),
+        },
       ],
     };
 
@@ -1290,6 +1328,7 @@ export default function App() {
       updatedInventory[idx] = { ...item, ...updatedData };
       setInventory(updatedInventory);
       setCoolerIntakeCode("");
+      setCoolerIntakeWeight("");
       toast.success(
         language === "es" ? "🧊 Ingreso confirmado" : "🧊 Intake confirmed"
       );
@@ -1299,6 +1338,7 @@ export default function App() {
       updatedInventory[idx] = { ...item, ...updatedData };
       setInventory(updatedInventory);
       setCoolerIntakeCode("");
+      setCoolerIntakeWeight("");
       toast.success(
         language === "es"
           ? "🧊 Ingreso confirmado (offline)"
@@ -1356,8 +1396,8 @@ export default function App() {
             </button>
           )}
 
-          {/* Descarga / Llegada a 501 (Plant) */}
-          {(userRole === "plant" || userRole === "admin") && (
+          {/* Descarga / Llegada a 501 (Cooler/Admin - NO plant porque Helen solo adiciona) */}
+          {(userRole === "cooler" || userRole === "admin") && (
             <button
               onClick={() => setCurrentScreen("descarga")}
               className="group relative bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
@@ -1420,19 +1460,24 @@ export default function App() {
             </button>
           )}
 
-          {/* Ver Inventario (All) - Ocupa 2 columnas si es el único o último */}
-          <button
-            onClick={() => setCurrentScreen("inventario")}
-            className="group relative bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20 col-span-2"
-          >
-            <div className="flex items-center justify-center gap-3">
-              <span className="text-3xl">📊</span>
-              <span className="text-base font-bold">{t.viewInventory}</span>
-            </div>
-            <div className="text-xs text-white/80 mt-1 text-center">
-              {t.viewInventoryDesc}
-            </div>
-          </button>
+          {/* Ver Inventario (Solo cooler, dispatch, store, admin - NO plant) */}
+          {(userRole === "cooler" ||
+            userRole === "dispatch" ||
+            userRole === "store" ||
+            userRole === "admin") && (
+            <button
+              onClick={() => setCurrentScreen("inventario")}
+              className="group relative bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20 col-span-2"
+            >
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-3xl">📊</span>
+                <span className="text-base font-bold">{t.viewInventory}</span>
+              </div>
+              <div className="text-xs text-white/80 mt-1 text-center">
+                {t.viewInventoryDesc}
+              </div>
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -1477,7 +1522,7 @@ export default function App() {
             <option value="">
               {language === "es" ? "Seleccionar tipo" : "Select type"}
             </option>
-            {MEAT_TYPES.map((m) => (
+            {(language === "es" ? MEAT_TYPES_ES : MEAT_TYPES_EN).map((m) => (
               <option key={m} value={m}>
                 {m}
               </option>
@@ -2953,66 +2998,140 @@ export default function App() {
   );
 
   // Pantalla de Ingreso a Cooler (confirmar in_cooler)
-  const renderCoolerIntake = () => (
-    <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-[#0d1a3b] to-[#111827] text-white p-6">
-      <ToastContainer position="top-center" />
-      <div className="flex w-full max-w-3xl justify-between items-center mb-6">
-        <button
-          onClick={() => setCurrentScreen("menu")}
-          className="bg-gray-700 hover:bg-gray-800 px-4 py-2 rounded"
-        >
-          ← {t.back}
-        </button>
-        <h1 className="text-2xl font-bold">{t.coolerIntakeTitle}</h1>
-        <button
-          onClick={handleLogout}
-          className="bg-gray-700 hover:bg-gray-800 px-3 py-1 rounded"
-        >
-          {t.logout}
-        </button>
-      </div>
-      <div className="w-full max-w-3xl bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-6 space-y-4">
-        <p className="text-white/80 text-sm">{t.coolerIntakeDesc}</p>
+  const renderCoolerIntake = () => {
+    // Buscar el item escaneado para mostrar información
+    const scannedItem = coolerIntakeCode
+      ? inventory.find((i) => i.id === coolerIntakeCode)
+      : null;
 
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            {language === "es" ? "Código del Producto" : "Product Code"}
-          </label>
-          <input
-            type="text"
-            value={coolerIntakeCode}
-            onChange={(e) => setCoolerIntakeCode(e.target.value)}
-            placeholder={t.scanPlaceholder}
-            className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white focus:border-blue-500 focus:outline-none"
-          />
+    return (
+      <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-[#0d1a3b] to-[#111827] text-white p-6">
+        <ToastContainer position="top-center" />
+        <div className="flex w-full max-w-3xl justify-between items-center mb-6">
+          <button
+            onClick={() => {
+              setCurrentScreen("menu");
+              setCoolerIntakeCode("");
+              setCoolerIntakeWeight("");
+            }}
+            className="bg-gray-700 hover:bg-gray-800 px-4 py-2 rounded"
+          >
+            ← {t.back}
+          </button>
+          <h1 className="text-2xl font-bold">{t.coolerIntakeTitle}</h1>
+          <button
+            onClick={handleLogout}
+            className="bg-gray-700 hover:bg-gray-800 px-3 py-1 rounded"
+          >
+            {t.logout}
+          </button>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setCoolerIntakeCameraOn(!coolerIntakeCameraOn)}
-          className="w-full bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 rounded-lg font-semibold py-3 text-lg"
-        >
-          {coolerIntakeCameraOn ? `❌ ${t.closeCamera}` : `📷 ${t.scanQR}`}
-        </button>
+        <div className="w-full max-w-3xl bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-6 space-y-4">
+          <p className="text-white/80 text-sm">{t.coolerIntakeDesc}</p>
 
-        {coolerIntakeCameraOn && (
-          <div className="mt-3 flex justify-end">
-            <div
-              className="w-full max-w-sm ml-auto"
-              id="qr-reader-cooler-intake"
-            ></div>
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              {language === "es" ? "Código del Producto" : "Product Code"}
+            </label>
+            <input
+              type="text"
+              value={coolerIntakeCode}
+              onChange={(e) => setCoolerIntakeCode(e.target.value)}
+              placeholder={t.scanPlaceholder}
+              className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white focus:border-blue-500 focus:outline-none"
+            />
           </div>
-        )}
 
-        <button
-          onClick={intakeToCooler}
-          className="w-full bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold py-3 text-lg"
-        >
-          {t.coolerIntakeButton}
-        </button>
+          <button
+            type="button"
+            onClick={() => setCoolerIntakeCameraOn(!coolerIntakeCameraOn)}
+            className="w-full bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 rounded-lg font-semibold py-3 text-lg"
+          >
+            {coolerIntakeCameraOn ? `❌ ${t.closeCamera}` : `📷 ${t.scanQR}`}
+          </button>
+
+          {coolerIntakeCameraOn && (
+            <div className="mt-3 flex justify-end">
+              <div
+                className="w-full max-w-sm ml-auto"
+                id="qr-reader-cooler-intake"
+              ></div>
+            </div>
+          )}
+
+          {/* Mostrar información del producto escaneado */}
+          {scannedItem && (
+            <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/30 space-y-3">
+              <h3 className="text-lg font-bold text-blue-300">
+                {t.productInfo}
+              </h3>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-white/60">
+                    {language === "es" ? "Producto:" : "Product:"}
+                  </span>
+                  <div className="font-semibold text-white">
+                    {scannedItem.type}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-white/60">
+                    {language === "es" ? "Fecha:" : "Date:"}
+                  </span>
+                  <div className="font-semibold text-white">
+                    {scannedItem.date}
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-white/60">{t.plantWeight}:</span>
+                  <div className="font-bold text-green-400 text-2xl">
+                    {scannedItem.weight} lb
+                  </div>
+                  <div className="text-xs text-white/50 mt-1">
+                    {language === "es"
+                      ? "(Peso registrado por Helen en la planta)"
+                      : "(Weight registered by Helen at plant)"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Input para peso del cooler */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              {t.coolerWeight} *
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              value={coolerIntakeWeight}
+              onChange={(e) => setCoolerIntakeWeight(e.target.value)}
+              placeholder={
+                language === "es"
+                  ? "Ingresa el peso real en el cooler"
+                  : "Enter actual cooler weight"
+              }
+              className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white focus:border-blue-500 focus:outline-none"
+            />
+            <p className="text-xs text-white/50 mt-1">
+              {language === "es"
+                ? "Este será el peso oficial del producto en el sistema"
+                : "This will be the official product weight in the system"}
+            </p>
+          </div>
+
+          <button
+            onClick={intakeToCooler}
+            className="w-full bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold py-3 text-lg"
+          >
+            {t.coolerIntakeButton}
+          </button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Vista principal - mostrar pantalla según estado
   return currentScreen === "menu"
