@@ -79,6 +79,9 @@ const texts = {
     storeReceptionDesc: "Confirm product reception",
     viewInventory: "View Inventory",
     viewInventoryDesc: "Review all products",
+    // Processing
+    processing: "Processing",
+    processingDesc: "Cutting after cooler intake",
   },
   es: {
     title: "Inventario Ordoñez Butcher Shop",
@@ -141,6 +144,9 @@ const texts = {
     storeReceptionDesc: "Confirmar recepción de productos",
     viewInventory: "Ver Inventario",
     viewInventoryDesc: "Revisar todos los productos",
+    // Processing
+    processing: "Procesamiento",
+    processingDesc: "Cortes después de recepción en cooler",
   },
 };
 
@@ -188,6 +194,98 @@ const MEAT_TYPES_EN = [
   "Pork - Part 1",
   "Pork - Part 2",
 ];
+
+// Procesamiento: primales y cortes disponibles
+const PROCESSING_PRIMALS = {
+  // Res
+  "Res • Brazuelo": [
+    "Diezmillo",
+    "Blade Paleta",
+    "Costilla Cargada",
+    "Lomito/Petit Tender Pico de Pato/Flat Iron",
+    "Cuello",
+    "Molida",
+    "Chambarette",
+    "Huesos P/Vender",
+    "Brisket",
+    "Huesos P/Deshechar",
+    "Grasa P/Vender",
+    "Grasa P/Deshechar",
+    "Otros Cortes",
+    "Corte 7",
+    "Corte 0",
+    "Estilo Texas",
+    "Texas Corte Mariposa",
+    "Corte Koreano",
+    "Denver",
+    "Teres Mayor",
+    "Chuck Roast",
+    "Espaldia",
+    "Punta Aguja C/Hueso",
+    "Punta Aguja S/Hueso",
+  ],
+  "Res • Pierna de Res": [
+    "Pulpa Negra",
+    "Bola Blanca",
+    "Boneless Shank",
+    "Cuete",
+    "Chambarete",
+    "Milanesa / Fetina",
+    "Cubos / Macisa",
+    "Hueso Blanco",
+    "Corte Canoa",
+    "Tuetano",
+    "Grasa P/Deshechar",
+    "Grasa P/Vender",
+    "Huesos P/Deshechar",
+  ],
+  "Res • Rib Eye": [
+    "Ribeye C/Hueso",
+    "Tomahawk",
+    "Boneless Ribeye",
+    "Costilla Normal",
+    "Costilla Cargada",
+    "Suadero",
+    "Otros Cortes",
+    "Molida Regular",
+    "Cubos",
+    "Negrita Arachera",
+    "Corte Madurado",
+    "Arachera Segunda",
+    "Huesos P/Vender",
+    "Huesos P/Deshechar",
+    "Hangersteak",
+  ],
+  "Res • T-Bone": [
+    "Tbone",
+    "Poterhouse",
+    "Strip Steak",
+    "Arachera",
+    "Piezas P/Deshebrar",
+    "Flank",
+    "Suadero",
+    "Sirloin Roast",
+    "Top Sirloin",
+    "Sirloin",
+    "Picana",
+    "Bavette",
+    "Punta",
+    "Hueso P/Deshechar",
+    "Huesos P/Vender",
+    "Grasa P/Deshechar",
+    "Grasa P/Vender",
+  ],
+  // Cerdo
+  "Cerdo • Brazuelo": ["Blade", "Costilla", "Macisa", "Hock"],
+  "Cerdo • Lomo": [
+    "Chuletas",
+    "Lomo S/Hueso",
+    "Costilla",
+    "Pancita or Belly",
+  ],
+  "Cerdo • Pierna": ["Colita", "Macisa", "Brisket", "Patas"],
+  "Cerdo • Grasa": ["Grasa P/Vender", "Grasa para Manteca"],
+};
 
 // Número de WhatsApp de Roberto (Central 501)
 const ROBERTO_WHATSAPP = "15198189446";
@@ -256,6 +354,7 @@ export default function App() {
   const [reportMonth, setReportMonth] = useState(""); // Mes seleccionado
   const [selectedProductGroup, setSelectedProductGroup] = useState(null); // Producto seleccionado en cooler detail
   const [selectedBatchForDiff, setSelectedBatchForDiff] = useState(null); // Lote seleccionado en vista de diferencias
+  const [selectedProcessingPrimal, setSelectedProcessingPrimal] = useState(null); // Primal seleccionado en procesamiento
 
   // Traducciones
   const t = texts[language];
@@ -1432,7 +1531,9 @@ export default function App() {
   // Scanner logic moved earlier to keep hook order stable
 
   // Renderizar pantalla de menú principal
-  const renderMenu = () => (
+  const renderMenu = () => {
+    const showProcessing = userRole === "cooler" || userRole === "admin";
+    return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#3b0d0d] via-[#2a0a0a] to-[#111827] text-white p-6">
       <ToastContainer position="top-center" />
 
@@ -1606,7 +1707,7 @@ export default function App() {
             userRole === "admin") && (
             <button
               onClick={() => setCurrentScreen("inventario")}
-              className="group relative bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20 col-span-2"
+              className={`group relative bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20 ${showProcessing ? "" : "col-span-2"}`}
             >
               <div className="flex items-center justify-center gap-3">
                 <span className="text-3xl">📊</span>
@@ -1617,10 +1718,26 @@ export default function App() {
               </div>
             </button>
           )}
+          {/* Procesamiento (Cooler / Admin) */}
+          {(userRole === "cooler" || userRole === "admin") && (
+            <button
+              onClick={() => setCurrentScreen("processing")}
+              className="group relative bg-gradient-to-br from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
+            >
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-3xl">⚙️</span>
+                <span className="text-base font-bold">{t.processing}</span>
+              </div>
+              <div className="text-xs text-white/80 mt-1 text-center">
+                {t.processingDesc}
+              </div>
+            </button>
+          )}
         </div>
       </div>
     </div>
   );
+  };
 
   // Renderizar pantalla de ingreso
   const renderIngreso = () => (
@@ -3242,7 +3359,7 @@ export default function App() {
                 itemsWithDifferences.forEach((item) => {
                   // Solo incluir items que tienen batchNumber
                   if (!item.batchNumber) return;
-                  
+
                   const batch = item.batchNumber;
                   if (!batchGroups[batch]) {
                     batchGroups[batch] = {
@@ -3253,8 +3370,8 @@ export default function App() {
                     };
                   }
                   batchGroups[batch].items.push(item);
-                  batchGroups[batch].totalPlantWeight += (item.plantWeight || 0);
-                  batchGroups[batch].totalCoolerWeight += (item.weight || 0);
+                  batchGroups[batch].totalPlantWeight += item.plantWeight || 0;
+                  batchGroups[batch].totalCoolerWeight += item.weight || 0;
                 });
 
                 const sortedBatches = Object.values(batchGroups).sort(
@@ -3616,6 +3733,110 @@ export default function App() {
     );
   };
 
+  // Vista de Procesamiento de Carne
+  const renderProcessing = () => (
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#3b0d0d] via-[#2a0a0a] to-[#111827] text-white p-6">
+      <ToastContainer position="top-center" />
+      {/* Header */}
+      <div className="flex w-full max-w-5xl mx-auto justify-between items-center mb-8">
+        <button
+          onClick={() => setCurrentScreen("menu")}
+          className="bg-gray-700 hover:bg-gray-800 px-4 py-2 rounded"
+        >
+          ← {language === "es" ? "Volver" : "Back"}
+        </button>
+        <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-3">
+          <span>⚙️</span>
+          {language === "es" ? "Procesamiento" : "Processing"}
+        </h1>
+        <button
+          onClick={handleLogout}
+          className="bg-gray-700 hover:bg-gray-800 px-3 py-1 rounded"
+        >
+          {t.logout}
+        </button>
+      </div>
+
+      {/* Intro */}
+      <div className="max-w-5xl mx-auto mb-6 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+        <p className="text-white/70 text-sm leading-relaxed">
+          {language === "es"
+            ? "Esta sección lista los cortes disponibles que se generan de cada primal después de la recepción en el cooler. Próximamente aquí se podrá registrar los pesos generados y trazabilidad de cada corte."
+            : "This section lists available cuts produced from each primal after cooler intake. Soon you will be able to record generated weights and traceability for each cut here."}
+        </p>
+      </div>
+
+      {/* Grid de primales */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto pb-12">
+        {Object.entries(PROCESSING_PRIMALS).map(([primal, cuts]) => {
+          const isOpen = selectedProcessingPrimal === primal;
+          return (
+            <div
+              key={primal}
+              className={`relative group bg-gradient-to-br from-yellow-900/30 to-orange-950/30 border border-yellow-600/30 rounded-2xl shadow-xl hover:shadow-amber-500/30 transition-all duration-300 backdrop-blur-xl overflow-hidden ${
+                isOpen ? "ring-2 ring-amber-400" : ""
+              }`}
+            >
+              <button
+                onClick={() =>
+                  setSelectedProcessingPrimal(
+                    isOpen ? null : primal
+                  )
+                }
+                className="w-full text-left p-6 flex flex-col gap-2"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl">🥩</span>
+                    <h2 className="text-lg font-bold tracking-wide">
+                      {primal}
+                    </h2>
+                  </div>
+                  <span className="text-sm text-amber-300 font-semibold bg-amber-500/10 px-3 py-1 rounded-full border border-amber-400/20">
+                    {cuts.length} {language === "es" ? "cortes" : "cuts"}
+                  </span>
+                </div>
+                <div className="text-xs text-white/60">
+                  {language === "es"
+                    ? isOpen
+                      ? "Clic para cerrar"
+                      : "Clic para ver cortes"
+                    : isOpen
+                    ? "Click to collapse"
+                    : "Click to view cuts"}
+                </div>
+              </button>
+              {isOpen && (
+                <div className="px-6 pb-6 -mt-2">
+                  <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-2">
+                    {cuts.map((corte) => (
+                      <div
+                        key={corte}
+                        className="flex items-center justify-between bg-black/20 border border-amber-500/20 rounded-lg px-3 py-2 text-sm"
+                      >
+                        <span className="text-white/90 truncate">
+                          {corte}
+                        </span>
+                        <span className="text-white/40 text-[10px] uppercase tracking-wide">
+                          {language === "es" ? "Corte" : "Cut"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 text-center text-[11px] text-white/40">
+                    {language === "es"
+                      ? "(Próximo: registrar pesos y trazabilidad)"
+                      : "(Coming soon: record weights & traceability)"}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   // Vista de detalle de un producto específico
   const renderProductDetail = () => {
     if (!selectedProductGroup) {
@@ -3944,6 +4165,8 @@ export default function App() {
     ? renderDescarga()
     : currentScreen === "coolerIntake"
     ? renderCoolerIntake()
+    : currentScreen === "processing"
+    ? renderProcessing()
     : currentScreen === "retiro"
     ? renderRetiro()
     : currentScreen === "recepcion"
