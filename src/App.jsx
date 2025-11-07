@@ -3000,13 +3000,17 @@ export default function App() {
                           onClick={() => setSelectedBatchForDiff(null)}
                           className="bg-gray-700 hover:bg-gray-800 px-4 py-2 rounded mb-4"
                         >
-                          ← {language === "es" ? "Volver a Lotes" : "Back to Batches"}
+                          ←{" "}
+                          {language === "es"
+                            ? "Volver a Lotes"
+                            : "Back to Batches"}
                         </button>
 
                         <div className="flex items-center justify-between">
                           <div>
                             <h2 className="text-3xl font-black text-white mb-2">
-                              📦 {language === "es" ? "Lote" : "Batch"}: {selectedBatchForDiff}
+                              📦 {language === "es" ? "Lote" : "Batch"}:{" "}
+                              {selectedBatchForDiff}
                             </h2>
                             <p className="text-white/60">
                               {batchItems.length}{" "}
@@ -3023,16 +3027,21 @@ export default function App() {
                             }`}
                           >
                             <div className="text-sm text-white/60 uppercase tracking-wider mb-1">
-                              {language === "es" ? "Diferencia Total" : "Total Difference"}
+                              {language === "es"
+                                ? "Diferencia Total"
+                                : "Total Difference"}
                             </div>
                             <div
                               className={`text-4xl font-black ${
                                 isLoss ? "text-red-400" : "text-green-400"
                               }`}
                             >
-                              {isLoss ? "📉" : "📈"} {totalDifference > 0 ? "+" : ""}
+                              {isLoss ? "📉" : "📈"}{" "}
+                              {totalDifference > 0 ? "+" : ""}
                               {totalDifference.toFixed(2)}
-                              <span className="text-xl text-white/80 ml-1">lb</span>
+                              <span className="text-xl text-white/80 ml-1">
+                                lb
+                              </span>
                             </div>
                             <div className="text-sm text-white/60 mt-1">
                               ({totalPercentChange > 0 ? "+" : ""}
@@ -3045,7 +3054,10 @@ export default function App() {
                         <div className="grid grid-cols-3 gap-4 mt-6">
                           <div className="bg-purple-500/10 px-4 py-3 rounded-lg border border-purple-400/20">
                             <div className="text-xs text-purple-300 mb-1">
-                              🏭 {language === "es" ? "Total Planta" : "Total Plant"}
+                              🏭{" "}
+                              {language === "es"
+                                ? "Total Planta"
+                                : "Total Plant"}
                             </div>
                             <div className="text-2xl font-bold text-white">
                               {totalPlantWeight.toFixed(2)} lb
@@ -3053,7 +3065,10 @@ export default function App() {
                           </div>
                           <div className="bg-blue-500/10 px-4 py-3 rounded-lg border border-blue-400/20">
                             <div className="text-xs text-blue-300 mb-1">
-                              🧊 {language === "es" ? "Total Cooler" : "Total Cooler"}
+                              🧊{" "}
+                              {language === "es"
+                                ? "Total Cooler"
+                                : "Total Cooler"}
                             </div>
                             <div className="text-2xl font-bold text-white">
                               {totalCoolerWeight.toFixed(2)} lb
@@ -3071,7 +3086,8 @@ export default function App() {
                                 isLoss ? "text-red-300" : "text-green-300"
                               }`}
                             >
-                              ⚖️ {language === "es" ? "Diferencia" : "Difference"}
+                              ⚖️{" "}
+                              {language === "es" ? "Diferencia" : "Difference"}
                             </div>
                             <div
                               className={`text-2xl font-bold ${
@@ -3143,7 +3159,10 @@ export default function App() {
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
                                       <div className="bg-purple-500/10 px-3 py-2 rounded-lg border border-purple-400/20">
                                         <div className="text-xs text-purple-300 mb-1">
-                                          🏭 {language === "es" ? "Planta" : "Plant"}
+                                          🏭{" "}
+                                          {language === "es"
+                                            ? "Planta"
+                                            : "Plant"}
                                         </div>
                                         <div className="text-lg font-bold text-white">
                                           {item.plantWeight} lb
@@ -3166,15 +3185,21 @@ export default function App() {
                                       >
                                         <div
                                           className={`text-xs mb-1 ${
-                                            isItemLoss ? "text-red-300" : "text-green-300"
+                                            isItemLoss
+                                              ? "text-red-300"
+                                              : "text-green-300"
                                           }`}
                                         >
                                           {isItemLoss ? "📉" : "📈"}{" "}
-                                          {language === "es" ? "Diferencia" : "Difference"}
+                                          {language === "es"
+                                            ? "Diferencia"
+                                            : "Difference"}
                                         </div>
                                         <div
                                           className={`text-lg font-bold ${
-                                            isItemLoss ? "text-red-400" : "text-green-400"
+                                            isItemLoss
+                                              ? "text-red-400"
+                                              : "text-green-400"
                                           }`}
                                         >
                                           {difference > 0 ? "+" : ""}
@@ -3212,10 +3237,13 @@ export default function App() {
                   );
                 }
 
-                // Vista principal: Agrupar por lotes
+                // Vista principal: Agrupar por lotes (solo items CON batchNumber)
                 const batchGroups = {};
                 itemsWithDifferences.forEach((item) => {
-                  const batch = item.batchNumber || "Sin Lote";
+                  // Solo incluir items que tienen batchNumber
+                  if (!item.batchNumber) return;
+                  
+                  const batch = item.batchNumber;
                   if (!batchGroups[batch]) {
                     batchGroups[batch] = {
                       batchNumber: batch,
@@ -3225,16 +3253,35 @@ export default function App() {
                     };
                   }
                   batchGroups[batch].items.push(item);
-                  batchGroups[batch].totalPlantWeight += item.plantWeight;
-                  batchGroups[batch].totalCoolerWeight += item.weight;
+                  batchGroups[batch].totalPlantWeight += (item.plantWeight || 0);
+                  batchGroups[batch].totalCoolerWeight += (item.weight || 0);
                 });
 
-                const sortedBatches = Object.values(batchGroups).sort((a, b) => {
-                  // Ordenar por batch number descendente (más reciente primero)
-                  if (a.batchNumber === "Sin Lote") return 1;
-                  if (b.batchNumber === "Sin Lote") return -1;
-                  return b.batchNumber.localeCompare(a.batchNumber);
-                });
+                const sortedBatches = Object.values(batchGroups).sort(
+                  (a, b) => {
+                    // Ordenar por batch number descendente (más reciente primero)
+                    return b.batchNumber.localeCompare(a.batchNumber);
+                  }
+                );
+
+                // Si no hay lotes con batchNumber, mostrar mensaje
+                if (sortedBatches.length === 0) {
+                  return (
+                    <div className="text-center py-20">
+                      <div className="text-6xl mb-4">📦</div>
+                      <div className="text-xl text-white/60">
+                        {language === "es"
+                          ? "No hay lotes con diferencias de peso"
+                          : "No batches with weight differences"}
+                      </div>
+                      <div className="text-sm text-white/40 mt-2">
+                        {language === "es"
+                          ? "Las diferencias solo se muestran para productos con número de lote asignado"
+                          : "Differences are only shown for products with assigned batch numbers"}
+                      </div>
+                    </div>
+                  );
+                }
 
                 return (
                   <>
@@ -3255,7 +3302,9 @@ export default function App() {
                         </div>
                         <div className="bg-gradient-to-br from-yellow-500/20 to-orange-600/20 px-6 py-4 rounded-xl border border-yellow-400/30">
                           <div className="text-sm text-white/60 uppercase tracking-wider mb-1">
-                            {language === "es" ? "Total Lotes" : "Total Batches"}
+                            {language === "es"
+                              ? "Total Lotes"
+                              : "Total Batches"}
                           </div>
                           <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
                             {sortedBatches.length}
@@ -3300,9 +3349,7 @@ export default function App() {
                               </div>
                               <div
                                 className={`px-3 py-1 rounded-full ${
-                                  isLoss
-                                    ? "bg-red-500/20"
-                                    : "bg-green-500/20"
+                                  isLoss ? "bg-red-500/20" : "bg-green-500/20"
                                 }`}
                               >
                                 <span
@@ -3331,7 +3378,9 @@ export default function App() {
                             >
                               <div className="text-xs text-white/60 uppercase tracking-wider mb-1">
                                 {isLoss ? "📉" : "📈"}{" "}
-                                {language === "es" ? "Diferencia Total" : "Total Difference"}
+                                {language === "es"
+                                  ? "Diferencia Total"
+                                  : "Total Difference"}
                               </div>
                               <div
                                 className={`text-3xl font-black ${
@@ -3340,7 +3389,9 @@ export default function App() {
                               >
                                 {difference > 0 ? "+" : ""}
                                 {difference.toFixed(2)}
-                                <span className="text-xl text-white/80 ml-1">lb</span>
+                                <span className="text-xl text-white/80 ml-1">
+                                  lb
+                                </span>
                               </div>
                               <div className="text-sm text-white/60 mt-1">
                                 ({percentChange > 0 ? "+" : ""}
@@ -3359,7 +3410,9 @@ export default function App() {
                                 </span>
                               </div>
                               <div className="flex justify-between text-sm">
-                                <span className="text-blue-300">🧊 Cooler:</span>
+                                <span className="text-blue-300">
+                                  🧊 Cooler:
+                                </span>
                                 <span className="text-white font-semibold">
                                   {batch.totalCoolerWeight.toFixed(2)} lb
                                 </span>
