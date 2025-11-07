@@ -11,8 +11,11 @@
   },
   "dependencies": {
     "autoprefixer": "^10.4.21",
+    "firebase": "^12.5.0",
+    "html5-qrcode": "^2.3.8",
     "i18next": "^25.6.0",
     "postcss": "^8.5.6",
+    "qrcode": "^1.5.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-i18next": "^16.2.4",

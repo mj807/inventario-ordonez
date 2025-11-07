@@ -2,9 +2,185 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
+html,
+* {
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100vh;
+  width: 100vw;
+}
+
+body {
   font-family: "Inter", sans-serif;
   background: linear-gradient(to bottom right, #7f1d1d, #0f172a);
-  color: white;
 }
+.bg-animated {
+  background: linear-gradient(-45deg, #000000, #1a1a1a, #3b0d0d, #4b0000);
+  background-size: 50% 50%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+.button-glow {
+  background-color: #1f2937;
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000;
+  transition: box-shadow 0.3s ease-in-out;
+}
+.button-glow:hover {
+  box-shadow: 0 0 20px #ff0000, 0 0 30px #ff0000, 0 0 40px #ff0000;
+}
+.card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.card h2 {
+  margin-top: 0;
+}
+.card p {
+  line-height: 1.5;
+}
+.login-box {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+  animation: fadeUp 0.6s ease-out;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.login-box input {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  padding: 12px;
+  margin: 8px 0;
+  width: 100%;
+  color: white;
+  border-radius: 8px;
+}
+.login-box input::placeholder {
+  color: #d36a6a;
+}
+.login-box button {
+  background-color: #2563eb;
+  border: none;
+  color: white;
+  padding: 12px;
+  width: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.login-box button:hover {
+  background-color: #1d4ed8;
+}
+.login-box label {
+  color: white;
+  font-size: 14px;
+}
+.login-box a {
+  color: #93c5fd;
+  text-decoration: none;
+}
+.login-box a:hover {
+  text-decoration: underline;
+}
+.container {
+  max-width: 400px;
+  margin: auto;
+  padding: 20px;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+}
+/* === Animación suave de aparición === */
+@keyframes fade-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fade-slide-up {
+  animation: fade-slide-up 0.8s ease-out both;
+}
+
+/* Constrain the main brand logo to a reasonable size and ensure it doesn't push layout */
+img[src="/OrdLogo.png"] {
+  max-width: 500px;
+  width: 500px;
+  height: auto;
+  display: block;
+  margin: 0 auto 8px auto;
+  position: relative;
+  z-index: 99999; /* put logo above background but allow login card (z-50) to override if needed */
+}
+
+/* Safety: ensure images never overflow viewport */
+img {
+  max-width: 100%;
+  height: auto;
+}
+/* Scrollbar styling for better aesthetics */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+}::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}   

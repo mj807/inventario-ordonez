@@ -1,0 +1,654 @@
+import React, { useEffect, useMemo, useState } from "react";
+import "./index.css";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import QRCode from "qrcode";
+import { Html5QrcodeScanner } from "html5-qrcode";
+
+// ===== Textos existentes (se mantienen) =====
+const texts = {
+  en: {
+    title: "Ordoñez Butcher Shop Inventory",
+    loginTitle: "Administrator Login",
+    username: "Username",
+    password: "Password",
+    login: "Login",
+    logout: "Logout",
+    addItem: "Add Item",
+    meatType: "Meat Type",
+    weight: "Weight (lb)",
+    date: "Date",
+    location: "Location",
+    save: "Save",
+    noData: "No items in inventory yet.",
+    enter: "Enter",
+    scanPlaceholder: "Scan or type piece ID",
+    assign: "Assign",
+    assignTo: "Assign to store…",
+    print: "Print",
+  },
+  es: {
+    title: "Inventario Ordoñez Butcher Shop",
+    loginTitle: "Ingreso de Administrador",
+    username: "Usuario",
+    password: "Contraseña",
+    login: "Ingresar",
+    logout: "Cerrar sesión",
+    addItem: "Agregar Producto",
+    meatType: "Tipo de Carne",
+    weight: "Peso (lb)",
+    date: "Fecha",
+    location: "Ubicación",
+    save: "Guardar",
+    noData: "No hay productos en el inventario.",
+    enter: "Entrar",
+    scanPlaceholder: "Escanea o escribe el ID",
+    assign: "Asignar",
+    assignTo: "Asignar a tienda…",
+    print: "Imprimir",
+  },
+};
+
+// ===== Credenciales existentes (se mantienen) =====
+const ADMIN_USER = "admin";
+const ADMIN_PASS = "Morchione0506@";
+
+// ===== Configuración de negocio =====
+const MEAT_TYPES = [
+  "Brazuelo",
+  "Pierna",
+  "T-Bone",
+  "Rib Eye",
+  "Cabeza",
+  "Hígado",
+  "Cola",
+  "Lengua",
+  "Corazón",
+  "HangSteak",
+  "Cerdo - Parte 1",
+  "Cerdo - Parte 2",
+];
+
+const COOLER = {
+  id: "cooler-1",
+  name: "Cooler Principal",
+  address: "501 Mersea Rd 5",
+};
+
+const STORES = [
+  { id: "store-main", name: "Carnicería Principal", address: "128 Erie St S" },
+  { id: "store-1", name: "Sucursal 1", address: "10 Mill St W" },
+  { id: "store-2", name: "Sucursal 2", address: "22 Talbot St W" },
+];
+
+// ===== Helpers =====
+const uid = () =>
+  `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+const STORAGE_KEY = "inventory"; // compatible con lo preexistente
+
+const buildQRPayload = (item) =>
+  JSON.stringify({
+    id: item.id,
+    type: item.type,
+    weight_lb: item.weight,
+    date: item.date,
+    from: COOLER.address,
+  });
+
+export default function App() {
+  // Estado
+  const [language, setLanguage] = useState("en");
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [form, setForm] = useState({
+    type: "",
+    weight: "",
+    date: "",
+    location: COOLER.name,
+  });
+  const [inventory, setInventory] = useState([]);
+  const [qrItem, setQrItem] = useState(null);
+  const [qrDataUrl, setQrDataUrl] = useState("");
+  const [scanCode, setScanCode] = useState("");
+  const [targetStore, setTargetStore] = useState("");
+  const [cameraOn, setCameraOn] = useState(false);
+  
+  // Traducciones
+  const t = texts[language];
+
+  // Efectos para persistencia
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) setInventory(JSON.parse(stored));
+  }, []);
+  
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
+  }, [inventory]);
+
+  // Handlers
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const user = e.target.user.value;
+    const pass = e.target.pass.value;
+    if (user === ADMIN_USER && pass === ADMIN_PASS) {
+      setLoggedIn(true);
+      toast.success("✅ Login successful!");
+    } else {
+      toast.error("❌ Invalid credentials!");
+    }
+  };
+
+  const handleLogout = () => setLoggedIn(false);
+
+  // Estado
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [inventory, setInventory] = useState([]);
+  const [form, setForm] = useState({
+    type: "",
+    weight: "",
+    date: "",
+    location: COOLER.name,
+  });
+
+  // Fases y sesión
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  // Form de alta (con select de tipos y cooler fijo)
+  const [form, setForm] = useState({
+    type: "",
+    weight: "",
+    date: "",
+    location: COOLER.name,
+  });
+
+  // Inventario (persistencia original)
+  const [inventory, setInventory] = useState([]);
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) setInventory(JSON.parse(stored));
+  }, []);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
+  }, [inventory]);
+
+  // ===== Login handlers =====
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const user = e.target.user.value;
+    const pass = e.target.pass.value;
+    if (user === ADMIN_USER && pass === ADMIN_PASS) {
+      setLoggedIn(true);
+      toast.success("✅ Login successful!");
+    } else {
+      toast.error("❌ Invalid credentials!");
+    }
+  };
+
+  const handleLogout = () => setLoggedIn(false);
+
+  // ===== Login screen =====
+  if (!loggedIn) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#3b0d0d] to-[#111827] p-4">
+        <div className="relative w-full max-w-md mx-auto pt-8">
+          <img
+            src="/OrdLogo.png"
+            alt="Logo"
+            className="w-24 md:w-32 mx-auto mb-2"
+          />
+          <h1 className="text-lg font-bold text-white text-center">
+            Ordoñez Group Inc.
+          </h1>
+          <p className="text-sm text-white/80 text-center mb-6">
+            Cattle & Butcher Management System
+          </p>
+
+          <form
+            onSubmit={handleLogin}
+            className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-lg p-4"
+          >
+            <h2 className="text-lg font-semibold text-center mb-4">
+              {t.loginTitle}
+            </h2>
+            <input
+              name="user"
+              placeholder={t.username}
+              className="w-full mb-3 px-3 py-2 rounded bg-white/90 text-black text-sm"
+              autoComplete="username"
+            />
+            <input
+              name="pass"
+              type="password"
+              placeholder={t.password}
+              className="w-full mb-3 px-3 py-2 rounded bg-white/90 text-black text-sm"
+              autoComplete="current-password"
+            />
+            <button
+              type="submit"
+              className="w-full bg-red-700 hover:bg-red-800 text-white rounded px-4 py-2 text-sm font-semibold"
+            >
+              {t.login}
+            </button>
+          </form>
+
+          <div className="absolute top-0 right-0">
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-gray-800 text-white border border-gray-500 rounded px-2 py-1 text-sm"
+            >
+              <option value="en">🇺🇸 EN</option>
+              <option value="es">🇪🇸 ES</option>
+            </select>
+          </div>
+        </div>
+        <ToastContainer position="top-center" />
+      </div>
+    );
+  }
+
+  // ===== Alta de pieza + QR =====
+  const [qrItem, setQrItem] = useState(null);
+  const [qrDataUrl, setQrDataUrl] = useState("");
+
+  const addItem = async (e) => {
+    e.preventDefault();
+    if (!form.type || !form.weight || !form.date) {
+      toast.warning(
+        "⚠️ " +
+          (language === "es"
+            ? "Completa tipo, peso y fecha"
+            : "Please fill type, weight and date")
+      );
+      return;
+    }
+    const item = {
+      id: uid(),
+      type: form.type,
+      weight: Number(form.weight),
+      date: form.date,
+      location: COOLER.name,
+      status: "in_cooler",
+      history: [{ at: new Date().toISOString(), action: "created" }],
+    };
+    const qrText = buildQRPayload(item);
+    const dataUrl = await QRCode.toDataURL(qrText, { margin: 0, scale: 8 });
+    setQrItem(item);
+    setQrDataUrl(dataUrl);
+
+    setInventory((prev) => [item, ...prev]);
+    setForm({ type: "", weight: "", date: "", location: COOLER.name });
+    toast.success(language === "es" ? "✅ Guardado" : "✅ Saved successfully!");
+  };
+
+  // Reimprimir QR desde la lista
+  const showQR = async (it) => {
+    const dataUrl = await QRCode.toDataURL(buildQRPayload(it), {
+      margin: 0,
+      scale: 8,
+    });
+    setQrItem(it);
+    setQrDataUrl(dataUrl);
+  };
+
+  // Impresión etiqueta
+  const printLabel = () => {
+    const w = window.open("", "PRINT", "height=600,width=800");
+    if (!w) return;
+    w.document
+      .write(`<!doctype html><html><head><title>Etiqueta ${qrItem?.id}</title><style>
+      *{box-sizing:border-box;font-family:system-ui,Arial}
+      .label{width:64mm;height:32mm;padding:4mm;display:flex;gap:6px;align-items:center}
+      img{width:28mm;height:28mm}
+      .txt{font-size:12px;line-height:1.2}
+      .id{font-weight:700;font-size:12px}
+    </style></head><body>`);
+    w.document.write(`<div class='label'>
+      <img src='${qrDataUrl}' />
+      <div class='txt'>
+        <div class='id'>${qrItem?.id}</div>
+        <div>${qrItem?.type} — ${qrItem?.weight} lb</div>
+        <div>${qrItem?.date}</div>
+        <div>${COOLER.name}</div>
+      </div>
+    </div>`);
+    w.document.write("</body></html>");
+    w.document.close();
+    w.focus();
+    w.print();
+    w.close();
+  };
+
+  // ===== Asignación por escaneo o tipeo =====
+  const [scanCode, setScanCode] = useState("");
+  const [targetStore, setTargetStore] = useState("");
+  const [cameraOn, setCameraOn] = useState(false);
+
+  // Inicializa el lector HTML5 cuando la cámara está activa
+  useEffect(() => {
+    if (!cameraOn) return;
+    const scanner = new Html5QrcodeScanner("qr-reader", {
+      fps: 10,
+      qrbox: 250,
+    });
+    const onScanSuccess = (text) => {
+      try {
+        const parsed = JSON.parse(text);
+        setScanCode(parsed.id || text);
+      } catch {
+        setScanCode(text);
+      }
+    };
+    const onScanError = () => {};
+    scanner.render(onScanSuccess, onScanError);
+    return () => {
+      scanner.clear().catch(() => {});
+    };
+  }, [cameraOn]);
+
+  const assignToStore = () => {
+    if (!scanCode || !targetStore)
+      return toast.warning(
+        language === "es"
+          ? "Escanea/ingresa código y elige tienda"
+          : "Scan/type code and choose store"
+      );
+    const idx = inventory.findIndex((i) => i.id === scanCode);
+    if (idx === -1)
+      return toast.error(
+        language === "es" ? "Código no encontrado" : "Code not found"
+      );
+    const updated = [...inventory];
+    const it = { ...updated[idx] };
+    it.status = "assigned";
+    it.assignedTo = targetStore;
+    it.assignedAt = new Date().toISOString();
+    it.history = [
+      ...(it.history || []),
+      { at: it.assignedAt, action: "assigned", to: targetStore },
+    ];
+    updated[idx] = it;
+    setInventory(updated);
+    setScanCode("");
+    setTargetStore("");
+    toast.success(language === "es" ? "Asignado" : "Assigned");
+  };
+
+  // ===== Filtro simple =====
+  const [query, setQuery] = useState("");
+  const filtered = useMemo(
+    () =>
+      inventory.filter((i) =>
+        `${i.type} ${i.id}`.toLowerCase().includes(query.toLowerCase())
+      ),
+    [inventory, query]
+  );
+
+  // ===== Pantalla de login =====
+  if (!loggedIn) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#3b0d0d] to-[#111827] p-4">
+        <div className="relative w-full max-w-md mx-auto pt-8">
+          <img
+            src="/OrdLogo.png"
+            alt="Logo"
+            className="w-24 md:w-32 mx-auto mb-2"
+          />
+          <h1 className="text-lg font-bold text-white text-center">
+            Ordoñez Group Inc.
+          </h1>
+          <p className="text-sm text-white/80 text-center mb-6">
+            Cattle & Butcher Management System
+          </p>
+
+          <form
+            onSubmit={handleLogin}
+            className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-lg p-4"
+          >
+            <h2 className="text-lg font-semibold text-center mb-4">
+              {t.loginTitle}
+            </h2>
+            <input
+              name="user"
+              placeholder={t.username}
+              className="w-full mb-3 px-3 py-2 rounded bg-white/90 text-black text-sm"
+              autoComplete="username"
+            />
+            <input
+              name="pass"
+              type="password"
+              placeholder={t.password}
+              className="w-full mb-3 px-3 py-2 rounded bg-white/90 text-black text-sm"
+              autoComplete="current-password"
+            />
+            <button
+              type="submit"
+              className="w-full bg-red-700 hover:bg-red-800 text-white rounded px-4 py-2 text-sm font-semibold"
+            >
+              {t.login}
+            </button>
+          </form>
+
+          <div className="absolute top-0 right-0">
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-gray-800 text-white border border-gray-500 rounded px-2 py-1 text-sm"
+            >
+              <option value="en">🇺🇸 EN</option>
+              <option value="es">🇪🇸 ES</option>
+            </select>
+          </div>
+        </div>
+        <ToastContainer position="top-center" />
+      </div>
+    );
+  }
+    );
+  }
+
+  // ===== App interna =====
+  return (
+    <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-[#3b0d0d] to-[#111827] text-white p-6">
+      <ToastContainer position="top-center" />
+
+      {/* Header */}
+      <div className="flex w-full max-w-5xl justify-between items-center mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-wide">
+          {t.title}
+        </h1>
+        <div className="flex items-center gap-3">
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="bg-gray-800 text-white border border-gray-500 rounded px-2 py-1"
+          >
+            <option value="en">🇺🇸 EN</option>
+            <option value="es">🇪🇸 ES</option>
+          </select>
+          <button
+            onClick={handleLogout}
+            className="bg-gray-700 hover:bg-gray-800 px-3 py-1 rounded"
+          >
+            {t.logout}
+          </button>
+        </div>
+      </div>
+
+      {/* Alta con tipos preconfigurados */}
+      <form
+        onSubmit={addItem}
+        className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-5 w-full max-w-5xl grid grid-cols-12 gap-3 mb-4"
+      >
+        <select
+          value={form.type}
+          onChange={(e) => setForm({ ...form, type: e.target.value })}
+          className="col-span-3 px-3 py-2 rounded text-black"
+        >
+          <option value="">{t.meatType}</option>
+          {MEAT_TYPES.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          placeholder={t.weight}
+          value={form.weight}
+          onChange={(e) => setForm({ ...form, weight: e.target.value })}
+          className="col-span-2 px-3 py-2 rounded text-black"
+          step="0.01"
+        />
+        <input
+          type="date"
+          value={form.date}
+          onChange={(e) => setForm({ ...form, date: e.target.value })}
+          className="col-span-3 px-3 py-2 rounded text-black"
+        />
+        <input
+          type="text"
+          value={form.location}
+          disabled
+          className="col-span-3 px-3 py-2 rounded text-black"
+        />
+        <button
+          type="submit"
+          className="col-span-1 bg-green-600 hover:bg-green-700 rounded font-semibold"
+        >
+          {t.save}
+        </button>
+      </form>
+
+      {/* Escaneo y asignación */}
+      <div className="w-full max-w-5xl bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-5 mb-4">
+        <div className="grid grid-cols-12 gap-3 items-center">
+          <input
+            value={scanCode}
+            onChange={(e) => setScanCode(e.target.value)}
+            placeholder={t.scanPlaceholder}
+            className="col-span-5 px-3 py-2 rounded text-black"
+          />
+          <select
+            value={targetStore}
+            onChange={(e) => setTargetStore(e.target.value)}
+            className="col-span-5 px-3 py-2 rounded text-black"
+          >
+            <option value="">{t.assignTo}</option>
+            {STORES.map((s) => (
+              <option key={s.id} value={`${s.name} — ${s.address}`}>
+                {s.name} — {s.address}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={assignToStore}
+            className="col-span-2 bg-indigo-600 hover:bg-indigo-700 rounded font-semibold"
+          >
+            {t.assign}
+          </button>
+        </div>
+        <div className="mt-3">
+          <button
+            onClick={() => setCameraOn((v) => !v)}
+            className="px-3 py-2 rounded bg-slate-600 hover:bg-slate-700"
+          >
+            {cameraOn
+              ? language === "es"
+                ? "Cerrar cámara"
+                : "Close camera"
+              : language === "es"
+              ? "Abrir cámara"
+              : "Open camera"}
+          </button>
+          {cameraOn && (
+            <div className="mt-3 max-w-md">
+              <div id="qr-reader"></div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Buscador y lista */}
+      <div className="w-full max-w-5xl mb-24">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={
+            language === "es" ? "Buscar por tipo o ID" : "Search by type or ID"
+          }
+          className="px-3 py-2 rounded text-black w-full mb-2"
+        />
+        <div className="grid gap-2">
+          {filtered.length === 0 && (
+            <div className="text-white/80">{t.noData}</div>
+          )}
+          {filtered.map((it) => (
+            <div
+              key={it.id}
+              className="bg-white/10 rounded-xl p-3 flex items-center justify-between"
+            >
+              <div>
+                <div className="font-semibold">
+                  {it.type} — {it.weight} lb
+                </div>
+                <div className="text-sm text-white/80">
+                  ID: {it.id} • {it.date} • {it.status}
+                  {it.assignedTo ? ` → ${it.assignedTo}` : ""}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => showQR(it)}
+                  className="px-3 py-2 rounded bg-slate-600 hover:bg-slate-700"
+                >
+                  QR
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Modal QR */}
+      {qrItem && (
+        <div
+          className="fixed inset-0 bg-black/70 grid place-items-center"
+          onClick={() => setQrItem(null)}
+        >
+          <div
+            className="bg-white text-black rounded-2xl p-4 w-[420px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="font-bold mb-2">
+              {language === "es" ? "Etiqueta para" : "Label for"}: {qrItem.type}{" "}
+              — {qrItem.weight} lb
+            </div>
+            <img src={qrDataUrl} alt="qr" className="mx-auto mb-2 w-48 h-48" />
+            <div className="text-xs mb-3">
+              ID: {qrItem.id}
+              <br />
+              {qrItem.date}
+              <br />
+              {COOLER.name} — {COOLER.address}
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                className="px-3 py-2 rounded bg-slate-200"
+                onClick={() => setQrItem(null)}
+              >
+                {language === "es" ? "Cerrar" : "Close"}
+              </button>
+              <button
+                className="px-3 py-2 rounded bg-emerald-500 text-white"
+                onClick={printLabel}
+              >
+                {t.print}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

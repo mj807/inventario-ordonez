@@ -1,25 +1,8 @@
 {
-  "version": 2,
-  "name": "inventario-ordonez",
-  "framework": "vite",
-  "public": true,
-  "builds": [
+  "rewrites": [
     {
-      "src": "package.json",
-      "use": "@vercel/static-build"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
-  "env": {
-    "APP_NAME": "Ordoñez Butcher Shop Inventory",
-    "DEFAULT_LANGUAGE": "en",
-    "ADMIN_USER": "admin",
-    "ADMIN_PASS": "Morchione0506@",
-    "COMPANY_NAME": "Ordoñez Group Inc."
-  }
+  ]
 }
