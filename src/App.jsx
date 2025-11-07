@@ -2150,7 +2150,7 @@ export default function App() {
 
           {/* Botones de vista */}
           <div className="w-full max-w-6xl mb-6">
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-2">
+            <div className="grid grid-cols-2 md:grid-cols-7 gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-2">
               <button
                 onClick={() => setInventoryView("summary")}
                 className={`py-3 px-3 rounded-lg font-semibold transition-all text-sm ${
@@ -2210,6 +2210,16 @@ export default function App() {
                 }`}
               >
                 📊 {language === "es" ? "Reportes" : "Reports"}
+              </button>
+              <button
+                onClick={() => setInventoryView("differences")}
+                className={`py-3 px-3 rounded-lg font-semibold transition-all text-sm ${
+                  inventoryView === "differences"
+                    ? "bg-purple-600 text-white shadow-lg"
+                    : "bg-transparent text-white/70 hover:bg-white/5"
+                }`}
+              >
+                ⚖️ {language === "es" ? "Diferencias" : "Differences"}
               </button>
             </div>
           </div>
@@ -2388,22 +2398,34 @@ export default function App() {
                                 {item.plantWeight && (
                                   <>
                                     <span className="bg-purple-500/10 px-2 py-1 rounded text-purple-300 border border-purple-400/20">
-                                      🏭 {language === "es" ? "Planta" : "Plant"}: {item.plantWeight} lb
+                                      🏭{" "}
+                                      {language === "es" ? "Planta" : "Plant"}:{" "}
+                                      {item.plantWeight} lb
                                     </span>
                                     {item.plantWeight !== item.weight && (
-                                      <span className={`px-2 py-1 rounded font-semibold ${
-                                        item.plantWeight > item.weight 
-                                          ? "bg-red-500/10 text-red-300 border border-red-400/20" 
-                                          : "bg-green-500/10 text-green-300 border border-green-400/20"
-                                      }`}>
-                                        {item.plantWeight > item.weight ? "📉" : "📈"} {language === "es" ? "Dif" : "Diff"}: {(item.weight - item.plantWeight).toFixed(2)} lb
+                                      <span
+                                        className={`px-2 py-1 rounded font-semibold ${
+                                          item.plantWeight > item.weight
+                                            ? "bg-red-500/10 text-red-300 border border-red-400/20"
+                                            : "bg-green-500/10 text-green-300 border border-green-400/20"
+                                        }`}
+                                      >
+                                        {item.plantWeight > item.weight
+                                          ? "📉"
+                                          : "📈"}{" "}
+                                        {language === "es" ? "Dif" : "Diff"}:{" "}
+                                        {(
+                                          item.weight - item.plantWeight
+                                        ).toFixed(2)}{" "}
+                                        lb
                                       </span>
                                     )}
                                   </>
                                 )}
                                 {item.batchNumber && (
                                   <span className="bg-indigo-500/10 px-2 py-1 rounded text-indigo-300 border border-indigo-400/20">
-                                    📦 {language === "es" ? "Lote" : "Batch"}: {item.batchNumber}
+                                    📦 {language === "es" ? "Lote" : "Batch"}:{" "}
+                                    {item.batchNumber}
                                   </span>
                                 )}
                                 {item.assignedTo && (
@@ -2543,22 +2565,33 @@ export default function App() {
                             {item.plantWeight && (
                               <>
                                 <span className="bg-purple-500/10 px-2 py-1 rounded text-purple-300 border border-purple-400/20">
-                                  🏭 {language === "es" ? "Planta" : "Plant"}: {item.plantWeight} lb
+                                  🏭 {language === "es" ? "Planta" : "Plant"}:{" "}
+                                  {item.plantWeight} lb
                                 </span>
                                 {item.plantWeight !== item.weight && (
-                                  <span className={`px-2 py-1 rounded font-semibold ${
-                                    item.plantWeight > item.weight 
-                                      ? "bg-red-500/10 text-red-300 border border-red-400/20" 
-                                      : "bg-green-500/10 text-green-300 border border-green-400/20"
-                                  }`}>
-                                    {item.plantWeight > item.weight ? "📉" : "📈"} {language === "es" ? "Dif" : "Diff"}: {(item.weight - item.plantWeight).toFixed(2)} lb
+                                  <span
+                                    className={`px-2 py-1 rounded font-semibold ${
+                                      item.plantWeight > item.weight
+                                        ? "bg-red-500/10 text-red-300 border border-red-400/20"
+                                        : "bg-green-500/10 text-green-300 border border-green-400/20"
+                                    }`}
+                                  >
+                                    {item.plantWeight > item.weight
+                                      ? "📉"
+                                      : "📈"}{" "}
+                                    {language === "es" ? "Dif" : "Diff"}:{" "}
+                                    {(item.weight - item.plantWeight).toFixed(
+                                      2
+                                    )}{" "}
+                                    lb
                                   </span>
                                 )}
                               </>
                             )}
                             {item.batchNumber && (
                               <span className="bg-indigo-500/10 px-2 py-1 rounded text-indigo-300 border border-indigo-400/20">
-                                📦 {language === "es" ? "Lote" : "Batch"}: {item.batchNumber}
+                                📦 {language === "es" ? "Lote" : "Batch"}:{" "}
+                                {item.batchNumber}
                               </span>
                             )}
                             {item.assignedTo && (
@@ -2913,6 +2946,199 @@ export default function App() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Vista de Diferencias de Peso */}
+          {inventoryView === "differences" && (
+            <div className="w-full max-w-6xl pb-8">
+              {(() => {
+                const itemsWithDifferences = inventory.filter(
+                  (item) => item.plantWeight && item.plantWeight !== item.weight
+                );
+
+                return itemsWithDifferences.length === 0 ? (
+                  <div className="text-center py-20">
+                    <div className="text-6xl mb-4">⚖️</div>
+                    <div className="text-xl text-white/60">
+                      {language === "es"
+                        ? "No hay diferencias de peso registradas"
+                        : "No weight differences recorded"}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Header con estadísticas */}
+                    <div className="bg-gradient-to-br from-yellow-900/30 to-orange-950/20 backdrop-blur-xl border border-yellow-500/30 rounded-2xl shadow-2xl p-8 mb-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h2 className="text-3xl font-black text-white mb-2">
+                            {language === "es"
+                              ? "⚖️ Diferencias de Peso"
+                              : "⚖️ Weight Differences"}
+                          </h2>
+                          <p className="text-white/60">
+                            {language === "es"
+                              ? "Productos con variación entre planta y cooler"
+                              : "Products with plant-to-cooler variation"}
+                          </p>
+                        </div>
+                        <div className="bg-gradient-to-br from-yellow-500/20 to-orange-600/20 px-6 py-4 rounded-xl border border-yellow-400/30">
+                          <div className="text-sm text-white/60 uppercase tracking-wider mb-1">
+                            {language === "es" ? "Total Items" : "Total Items"}
+                          </div>
+                          <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
+                            {itemsWithDifferences.length}
+                            <span className="text-xl text-white/80 ml-2">
+                              {language === "es" ? "pzs" : "pcs"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Lista de productos con diferencias */}
+                    <div className="space-y-3">
+                      {itemsWithDifferences
+                        .slice()
+                        .sort((a, b) => {
+                          const diffA = Math.abs(a.weight - a.plantWeight);
+                          const diffB = Math.abs(b.weight - b.plantWeight);
+                          return diffB - diffA; // Mayor diferencia primero
+                        })
+                        .map((item, index) => {
+                          const difference = item.weight - item.plantWeight;
+                          const percentChange = (
+                            (difference / item.plantWeight) *
+                            100
+                          ).toFixed(2);
+                          const isLoss = difference < 0;
+
+                          return (
+                            <div
+                              key={item.id}
+                              className={`bg-gradient-to-r backdrop-blur-md border rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group ${
+                                isLoss
+                                  ? "from-red-900/20 to-red-950/10 border-red-500/30 hover:border-red-400/50"
+                                  : "from-green-900/20 to-green-950/10 border-green-500/30 hover:border-green-400/50"
+                              }`}
+                            >
+                              <div className="flex items-center p-5">
+                                {/* Número de orden */}
+                                <div
+                                  className={`w-12 h-12 rounded-xl flex items-center justify-center mr-4 font-bold text-white group-hover:scale-110 transition-transform ${
+                                    isLoss
+                                      ? "bg-gradient-to-br from-red-500/20 to-red-600/20"
+                                      : "bg-gradient-to-br from-green-500/20 to-green-600/20"
+                                  }`}
+                                >
+                                  #{index + 1}
+                                </div>
+
+                                {/* Icono del producto */}
+                                <div className="mr-4">
+                                  <span className="text-4xl">🥩</span>
+                                </div>
+
+                                {/* Información principal */}
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-2 flex-wrap">
+                                    <h3 className="font-bold text-xl text-white">
+                                      {item.type}
+                                    </h3>
+                                    <div className="h-1 w-1 rounded-full bg-white/30"></div>
+                                    <span className="text-sm text-white/60">
+                                      📅 {item.date}
+                                    </span>
+                                    {item.batchNumber && (
+                                      <>
+                                        <div className="h-1 w-1 rounded-full bg-white/30"></div>
+                                        <span className="bg-indigo-500/10 px-2 py-1 rounded text-indigo-300 border border-indigo-400/20 text-xs">
+                                          📦 {item.batchNumber}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {/* Comparación de pesos */}
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
+                                    <div className="bg-purple-500/10 px-3 py-2 rounded-lg border border-purple-400/20">
+                                      <div className="text-xs text-purple-300 mb-1">
+                                        🏭{" "}
+                                        {language === "es" ? "Planta" : "Plant"}
+                                      </div>
+                                      <div className="text-lg font-bold text-white">
+                                        {item.plantWeight} lb
+                                      </div>
+                                    </div>
+                                    <div className="bg-blue-500/10 px-3 py-2 rounded-lg border border-blue-400/20">
+                                      <div className="text-xs text-blue-300 mb-1">
+                                        🧊 Cooler
+                                      </div>
+                                      <div className="text-lg font-bold text-white">
+                                        {item.weight} lb
+                                      </div>
+                                    </div>
+                                    <div
+                                      className={`px-3 py-2 rounded-lg border ${
+                                        isLoss
+                                          ? "bg-red-500/10 border-red-400/20"
+                                          : "bg-green-500/10 border-green-400/20"
+                                      }`}
+                                    >
+                                      <div
+                                        className={`text-xs mb-1 ${
+                                          isLoss
+                                            ? "text-red-300"
+                                            : "text-green-300"
+                                        }`}
+                                      >
+                                        {isLoss ? "📉" : "📈"}{" "}
+                                        {language === "es"
+                                          ? "Diferencia"
+                                          : "Difference"}
+                                      </div>
+                                      <div
+                                        className={`text-lg font-bold ${
+                                          isLoss
+                                            ? "text-red-400"
+                                            : "text-green-400"
+                                        }`}
+                                      >
+                                        {difference > 0 ? "+" : ""}
+                                        {difference.toFixed(2)} lb
+                                        <span className="text-sm ml-2">
+                                          ({percentChange > 0 ? "+" : ""}
+                                          {percentChange}%)
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* ID del item */}
+                                  <div className="text-xs text-white/50">
+                                    <span className="font-mono bg-white/5 px-2 py-1 rounded border border-white/10">
+                                      ID: {item.id}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Botón QR */}
+                                <button
+                                  onClick={() => showQR(item)}
+                                  className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-emerald-600 hover:to-emerald-700 px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 hover:shadow-emerald-500/50 hover:scale-110 group-hover:animate-pulse"
+                                >
+                                  <span className="text-2xl">📱</span>
+                                  <span className="ml-2">QR</span>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
 
