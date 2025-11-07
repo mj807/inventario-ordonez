@@ -2381,10 +2381,31 @@ export default function App() {
                                     : "Assigned"}
                                 </span>
                               </div>
-                              <div className="text-xs text-white/50 ml-12">
+                              <div className="text-xs text-white/50 ml-12 flex items-center gap-3 flex-wrap">
                                 <span className="font-mono bg-white/5 px-2 py-1 rounded">
                                   {item.id}
                                 </span>
+                                {item.plantWeight && (
+                                  <>
+                                    <span className="bg-purple-500/10 px-2 py-1 rounded text-purple-300 border border-purple-400/20">
+                                      🏭 {language === "es" ? "Planta" : "Plant"}: {item.plantWeight} lb
+                                    </span>
+                                    {item.plantWeight !== item.weight && (
+                                      <span className={`px-2 py-1 rounded font-semibold ${
+                                        item.plantWeight > item.weight 
+                                          ? "bg-red-500/10 text-red-300 border border-red-400/20" 
+                                          : "bg-green-500/10 text-green-300 border border-green-400/20"
+                                      }`}>
+                                        {item.plantWeight > item.weight ? "📉" : "📈"} {language === "es" ? "Dif" : "Diff"}: {(item.weight - item.plantWeight).toFixed(2)} lb
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                                {item.batchNumber && (
+                                  <span className="bg-indigo-500/10 px-2 py-1 rounded text-indigo-300 border border-indigo-400/20">
+                                    📦 {language === "es" ? "Lote" : "Batch"}: {item.batchNumber}
+                                  </span>
+                                )}
                                 {item.assignedTo && (
                                   <>
                                     <span className="mx-2">→</span>
@@ -2515,10 +2536,31 @@ export default function App() {
                           </div>
 
                           {/* Información secundaria */}
-                          <div className="flex items-center gap-4 text-xs text-white/50">
+                          <div className="flex items-center gap-4 text-xs text-white/50 flex-wrap">
                             <span className="font-mono bg-white/5 px-2 py-1 rounded border border-white/10">
                               ID: {item.id}
                             </span>
+                            {item.plantWeight && (
+                              <>
+                                <span className="bg-purple-500/10 px-2 py-1 rounded text-purple-300 border border-purple-400/20">
+                                  🏭 {language === "es" ? "Planta" : "Plant"}: {item.plantWeight} lb
+                                </span>
+                                {item.plantWeight !== item.weight && (
+                                  <span className={`px-2 py-1 rounded font-semibold ${
+                                    item.plantWeight > item.weight 
+                                      ? "bg-red-500/10 text-red-300 border border-red-400/20" 
+                                      : "bg-green-500/10 text-green-300 border border-green-400/20"
+                                  }`}>
+                                    {item.plantWeight > item.weight ? "📉" : "📈"} {language === "es" ? "Dif" : "Diff"}: {(item.weight - item.plantWeight).toFixed(2)} lb
+                                  </span>
+                                )}
+                              </>
+                            )}
+                            {item.batchNumber && (
+                              <span className="bg-indigo-500/10 px-2 py-1 rounded text-indigo-300 border border-indigo-400/20">
+                                📦 {language === "es" ? "Lote" : "Batch"}: {item.batchNumber}
+                              </span>
+                            )}
                             {item.assignedTo && (
                               <>
                                 <span>→</span>
