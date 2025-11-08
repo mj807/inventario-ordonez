@@ -3745,30 +3745,30 @@ export default function App() {
   const renderProcessing = () => (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#3b0d0d] via-[#2a0a0a] to-[#111827] text-white">
       <ToastContainer position="top-center" />
-      
+
       {/* Header compacto */}
-      <div className="flex w-full justify-between items-center px-6 py-3 bg-black/20 border-b border-amber-500/20">
+      <div className="flex w-full justify-between items-center px-4 py-2 bg-black/20 border-b border-amber-500/20">
         <button
           onClick={() => setCurrentScreen("menu")}
-          className="bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded text-sm transition-colors"
+          className="bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-xs transition-colors"
         >
           ← {language === "es" ? "Menú" : "Menu"}
         </button>
-        <h1 className="text-xl font-bold text-amber-400 flex items-center gap-2">
-          <span>⚙️</span>
+        <h1 className="text-base font-bold text-amber-400 flex items-center gap-1.5">
+          <span className="text-sm">⚙️</span>
           {language === "es" ? "Procesamiento" : "Processing"}
         </h1>
         <button
           onClick={handleLogout}
-          className="bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded text-sm transition-colors"
+          className="bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-xs transition-colors"
         >
           {t.logout}
         </button>
       </div>
 
-      {/* Grid compacto de primales */}
-      <div className="flex-1 overflow-auto p-4">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      {/* Grid ultra compacto */}
+      <div className="flex-1 overflow-auto p-3">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
           {Object.entries(PROCESSING_PRIMALS).map(([primal, cuts]) => {
             // Determinar el icono según el primal
             let icon = "🥩";
@@ -3783,21 +3783,19 @@ export default function App() {
               <button
                 key={primal}
                 onClick={() => setSelectedProcessingPrimal(primal)}
-                className="group bg-gradient-to-br from-amber-900/20 to-orange-950/20 border border-amber-600/30 rounded-lg p-3 hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-200 text-left"
+                className="group bg-gradient-to-br from-amber-900/20 to-orange-950/20 border border-amber-600/30 rounded p-2 hover:border-amber-500 hover:shadow-md hover:shadow-amber-500/20 transition-all text-left"
               >
-                <div className="flex items-start gap-2 mb-2">
-                  <span className="text-2xl">{icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold text-white leading-tight group-hover:text-amber-300 transition-colors">
-                      {primal}
-                    </h3>
-                  </div>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="text-lg">{icon}</span>
+                  <h3 className="text-xs font-semibold text-white leading-tight group-hover:text-amber-300 transition-colors flex-1 min-w-0">
+                    {primal}
+                  </h3>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-amber-500/80">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-amber-500/70">
                     {cuts.length} {language === "es" ? "cortes" : "cuts"}
                   </span>
-                  <svg className="w-4 h-4 text-gray-600 group-hover:text-amber-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 text-gray-600 group-hover:text-amber-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
@@ -3818,14 +3816,14 @@ export default function App() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header compacto del modal */}
-            <div className="bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🥩</span>
+            <div className="bg-gradient-to-r from-amber-600 to-orange-600 px-3 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🥩</span>
                 <div>
-                  <h2 className="text-lg font-bold text-white">
+                  <h2 className="text-sm font-bold text-white">
                     {selectedProcessingPrimal}
                   </h2>
-                  <p className="text-xs text-amber-100">
+                  <p className="text-[10px] text-amber-100">
                     {PROCESSING_PRIMALS[selectedProcessingPrimal].length}{" "}
                     {language === "es" ? "cortes" : "cuts"}
                   </p>
@@ -3833,32 +3831,32 @@ export default function App() {
               </div>
               <button
                 onClick={() => setSelectedProcessingPrimal(null)}
-                className="text-white hover:bg-white/20 p-1.5 rounded transition-colors"
+                className="text-white hover:bg-white/20 p-1 rounded transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
             {/* Lista compacta de cortes */}
-            <div className="p-4 overflow-y-auto max-h-[calc(85vh-120px)]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="p-3 overflow-y-auto max-h-[calc(85vh-80px)]">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1.5">
                 {PROCESSING_PRIMALS[selectedProcessingPrimal].map((corte, idx) => (
                   <div
                     key={corte}
-                    className="flex items-center gap-2 bg-black/30 border border-gray-700 rounded px-3 py-2 hover:border-amber-500/50 hover:bg-black/50 transition-all text-sm"
+                    className="flex items-center gap-1.5 bg-black/30 border border-gray-700 rounded px-2 py-1.5 hover:border-amber-500/50 hover:bg-black/50 transition-all"
                   >
-                    <div className="w-6 h-6 bg-amber-500/10 rounded flex items-center justify-center text-amber-500 font-semibold text-xs flex-shrink-0">
+                    <div className="w-5 h-5 bg-amber-500/10 rounded flex items-center justify-center text-amber-500 font-semibold text-[10px] flex-shrink-0">
                       {idx + 1}
                     </div>
-                    <span className="text-white/90 flex-1">{corte}</span>
+                    <span className="text-white/90 text-xs flex-1">{corte}</span>
                   </div>
                 ))}
               </div>
-              
-              <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
-                <p className="text-xs text-blue-300">
+
+              <div className="mt-3 p-2 bg-blue-900/20 border border-blue-500/30 rounded">
+                <p className="text-[10px] text-blue-300">
                   💡 {language === "es" 
                     ? "Próximamente: registro de pesos y trazabilidad"
                     : "Coming soon: weight tracking and traceability"}
