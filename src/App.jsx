@@ -3743,48 +3743,32 @@ export default function App() {
 
   // Vista de Procesamiento de Carne
   const renderProcessing = () => (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#3b0d0d] via-[#2a0a0a] to-[#111827] text-white">
       <ToastContainer position="top-center" />
       
-      {/* Header con logo y navegación */}
-      <header className="border-b border-gray-700 bg-gray-900/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center">
-              <span className="text-2xl">🥩</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white">
-                {language === "es" ? "Ordoñez Cattle Farms" : "Ordoñez Cattle Farms"}
-              </h1>
-              <p className="text-xs text-amber-500">
-                {language === "es" ? "Desde el corazón ganadero de Honduras" : "From the heart of Honduras cattle country"}
-              </p>
-            </div>
-          </div>
-          <nav className="flex items-center gap-6">
-            <button
-              onClick={() => setCurrentScreen("menu")}
-              className="text-sm text-gray-400 hover:text-amber-500 transition-colors"
-            >
-              {language === "es" ? "Inicio" : "Home"}
-            </button>
-            <button className="text-sm text-amber-500 font-semibold border-b-2 border-amber-500 pb-1">
-              {language === "es" ? "Menú" : "Menu"}
-            </button>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-gray-400 hover:text-amber-500 transition-colors"
-            >
-              {t.logout}
-            </button>
-          </nav>
-        </div>
-      </header>
+      {/* Header compacto */}
+      <div className="flex w-full justify-between items-center px-6 py-3 bg-black/20 border-b border-amber-500/20">
+        <button
+          onClick={() => setCurrentScreen("menu")}
+          className="bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded text-sm transition-colors"
+        >
+          ← {language === "es" ? "Menú" : "Menu"}
+        </button>
+        <h1 className="text-xl font-bold text-amber-400 flex items-center gap-2">
+          <span>⚙️</span>
+          {language === "es" ? "Procesamiento" : "Processing"}
+        </h1>
+        <button
+          onClick={handleLogout}
+          className="bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded text-sm transition-colors"
+        >
+          {t.logout}
+        </button>
+      </div>
 
-      {/* Contenido principal */}
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Grid compacto de primales */}
+      <div className="flex-1 overflow-auto p-4">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {Object.entries(PROCESSING_PRIMALS).map(([primal, cuts]) => {
             // Determinar el icono según el primal
             let icon = "🥩";
@@ -3796,99 +3780,88 @@ export default function App() {
             else if (primal.includes("Grasa")) icon = "🧈";
 
             return (
-              <div
+              <button
                 key={primal}
                 onClick={() => setSelectedProcessingPrimal(primal)}
-                className="group relative bg-gray-800/50 border border-gray-700 rounded-2xl p-6 hover:border-amber-500/50 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer"
+                className="group bg-gradient-to-br from-amber-900/20 to-orange-950/20 border border-amber-600/30 rounded-lg p-3 hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-200 text-left"
               >
-                {/* Icono */}
-                <div className="mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-amber-500/20 to-orange-600/20 rounded-xl flex items-center justify-center">
-                    <span className="text-4xl">{icon}</span>
+                <div className="flex items-start gap-2 mb-2">
+                  <span className="text-2xl">{icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-bold text-white leading-tight group-hover:text-amber-300 transition-colors">
+                      {primal}
+                    </h3>
                   </div>
                 </div>
-
-                {/* Título */}
-                <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-amber-400 transition-colors">
-                  {primal}
-                </h2>
-
-                {/* Subtítulo */}
-                <p className="text-sm text-amber-500/80 mb-4">
-                  {cuts.length} {language === "es" ? "cortes disponibles" : "available cuts"}
-                </p>
-
-                {/* Indicador de hover */}
-                <div className="absolute bottom-4 right-4 text-gray-600 group-hover:text-amber-500 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-amber-500/80">
+                    {cuts.length} {language === "es" ? "cortes" : "cuts"}
+                  </span>
+                  <svg className="w-4 h-4 text-gray-600 group-hover:text-amber-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
-      </main>
+      </div>
 
-      {/* Modal de detalles del primal */}
+      {/* Modal compacto */}
       {selectedProcessingPrimal && (
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedProcessingPrimal(null)}
         >
           <div
-            className="bg-gray-800 border border-gray-700 rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden shadow-2xl"
+            className="bg-gray-900 border border-amber-600/50 rounded-xl max-w-3xl w-full max-h-[85vh] overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header del modal */}
-            <div className="bg-gradient-to-r from-amber-600 to-orange-600 px-8 py-6 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
-                  <span className="text-4xl">🥩</span>
-                </div>
+            {/* Header compacto del modal */}
+            <div className="bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🥩</span>
                 <div>
-                  <h2 className="text-3xl font-bold text-white">
+                  <h2 className="text-lg font-bold text-white">
                     {selectedProcessingPrimal}
                   </h2>
-                  <p className="text-amber-100">
+                  <p className="text-xs text-amber-100">
                     {PROCESSING_PRIMALS[selectedProcessingPrimal].length}{" "}
-                    {language === "es" ? "cortes disponibles" : "available cuts"}
+                    {language === "es" ? "cortes" : "cuts"}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedProcessingPrimal(null)}
-                className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
+                className="text-white hover:bg-white/20 p-1.5 rounded transition-colors"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            {/* Lista de cortes */}
-            <div className="p-8 overflow-y-auto max-h-[calc(80vh-140px)]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Lista compacta de cortes */}
+            <div className="p-4 overflow-y-auto max-h-[calc(85vh-120px)]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {PROCESSING_PRIMALS[selectedProcessingPrimal].map((corte, idx) => (
                   <div
                     key={corte}
-                    className="bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-3 hover:border-amber-500/50 hover:bg-gray-900/80 transition-all"
+                    className="flex items-center gap-2 bg-black/30 border border-gray-700 rounded px-3 py-2 hover:border-amber-500/50 hover:bg-black/50 transition-all text-sm"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-500 font-bold text-sm">
-                        {idx + 1}
-                      </div>
-                      <span className="text-white font-medium flex-1">{corte}</span>
+                    <div className="w-6 h-6 bg-amber-500/10 rounded flex items-center justify-center text-amber-500 font-semibold text-xs flex-shrink-0">
+                      {idx + 1}
                     </div>
+                    <span className="text-white/90 flex-1">{corte}</span>
                   </div>
                 ))}
               </div>
               
-              <div className="mt-8 p-4 bg-blue-900/20 border border-blue-500/30 rounded-xl">
-                <p className="text-sm text-blue-300">
+              <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                <p className="text-xs text-blue-300">
                   💡 {language === "es" 
-                    ? "Próximamente podrás registrar pesos y trazabilidad de cada corte"
-                    : "Coming soon: record weights and traceability for each cut"}
+                    ? "Próximamente: registro de pesos y trazabilidad"
+                    : "Coming soon: weight tracking and traceability"}
                 </p>
               </div>
             </div>
