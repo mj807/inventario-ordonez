@@ -313,6 +313,7 @@ export default function App() {
   const [language, setLanguage] = useState("en");
   const [loggedIn, setLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState("admin"); // admin|plant|cooler|dispatch|store
+  const [currentUser, setCurrentUser] = useState(""); // username del usuario actual
   const [currentScreen, setCurrentScreen] = useState("menu"); // menu, ingreso, descarga, coolerIntake, retiro, recepcion, inventario, coolerDetail, productDetail
 
   // Aseguramos que el root tenga altura completa
@@ -520,6 +521,57 @@ export default function App() {
     console.log("📅 sortedByDate resultado:", result.length, "grupos");
     return result;
   }, [inventory]);
+
+  // Filtrar inventario para usuarios "plant" - solo ver lo que ellos crearon
+  const filteredInventoryForPlant = useMemo(() => {
+    if (userRole !== "plant") {
+      return inventory; // Otros roles ven todo
+    }
+    // Usuario plant solo ve lo que él/ella creó
+    return inventory.filter((item) => item.createdBy === currentUser);
+  }, [inventory, userRole, currentUser]);
+
+  // sortedGroups filtrado para plant
+  const sortedGroupsForView = useMemo(() => {
+    const itemsToUse = userRole === "plant" ? filteredInventoryForPlant : inventory;
+    const groupedInventory = itemsToUse.reduce((acc, item) => {
+      if (!acc[item.type]) {
+        acc[item.type] = {
+          type: item.type,
+          totalWeight: 0,
+          items: [],
+        };
+      }
+      acc[item.type].totalWeight += item.weight;
+      acc[item.type].items.push(item);
+      return acc;
+    }, {});
+
+    return Object.values(groupedInventory).sort((a, b) =>
+      a.type.localeCompare(b.type)
+    );
+  }, [inventory, filteredInventoryForPlant, userRole]);
+
+  // sortedByDate filtrado para plant
+  const sortedByDateForView = useMemo(() => {
+    const itemsToUse = userRole === "plant" ? filteredInventoryForPlant : inventory;
+    const byDateGroups = itemsToUse.reduce((acc, item) => {
+      if (!acc[item.date]) {
+        acc[item.date] = {
+          date: item.date,
+          totalWeight: 0,
+          items: [],
+        };
+      }
+      acc[item.date].totalWeight += item.weight;
+      acc[item.date].items.push(item);
+      return acc;
+    }, {});
+
+    return Object.values(byDateGroups).sort(
+      (a, b) => new Date(b.date) - new Date(a.date)
+    );
+  }, [inventory, filteredInventoryForPlant, userRole]);
 
   // Inventarios asignados por carnicería
   const assignedByStore = useMemo(() => {
@@ -993,7 +1045,10 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => setLoggedIn(false);
+  const handleLogout = () => {
+    setLoggedIn(false);
+    setCurrentUser("");
+  };
 
   const handleLoginAttempt = (user, pass) => {
     const cred = CREDENTIALS[user];
@@ -1007,6 +1062,7 @@ export default function App() {
     }
     setLoggedIn(true);
     setUserRole(cred.role);
+    setCurrentUser(user); // Guardar el username
     toast.success(
       language === "es"
         ? `✅ Bienvenido ${cred.name} (${cred.role})`
@@ -1069,12 +1125,14 @@ export default function App() {
       date: form.date,
       location: COOLER.name,
       batchNumber: currentBatch, // Agregar número de lote
+      createdBy: currentUser, // Usuario que creó el item
       status: "plant_received", // primera etapa
       history: [
         {
           at: new Date().toISOString(),
           action: "plant_received",
           by: userRole,
+          user: currentUser,
           batch: currentBatch,
         },
       ],
@@ -1541,8 +1599,12 @@ export default function App() {
                 <span className="text-xl">🐄</span>
               </div>
               <div>
-                <h1 className="text-lg font-bold text-white">Ordoñez Cattle Farms</h1>
-                <p className="text-xs text-[#d4a574]">Desde el corazón ganadero de Honduras</p>
+                <h1 className="text-lg font-bold text-white">
+                  Ordoñez Cattle Farms
+                </h1>
+                <p className="text-xs text-[#d4a574]">
+                  Desde el corazón ganadero de Honduras
+                </p>
               </div>
             </div>
             <nav className="flex items-center gap-4">
@@ -1567,7 +1629,6 @@ export default function App() {
         {/* Grid de opciones del menú - estilo elegante */}
         <main className="flex-1 flex items-center justify-center p-6">
           <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            
             {/* Ingreso de Inventario (Plant) */}
             {(userRole === "plant" || userRole === "admin") && (
               <button
@@ -1745,9 +1806,7 @@ export default function App() {
                 <h2 className="text-xl font-bold text-white mb-2 group-hover:text-[#d4a574] transition-colors">
                   {t.processing}
                 </h2>
-                <p className="text-sm text-[#d4a574]/80">
-                  {t.processingDesc}
-                </p>
+                <p className="text-sm text-[#d4a574]/80">{t.processingDesc}</p>
               </button>
             )}
           </div>
@@ -2362,7 +2421,7 @@ export default function App() {
           {/* Vista sumarizada por producto */}
           {inventoryView === "summary" && (
             <div className="w-full max-w-6xl pb-8">
-              {sortedGroups.length === 0 && (
+              {sortedGroupsForView.length === 0 && (
                 <div className="text-center py-20">
                   <div className="text-6xl mb-4">📦</div>
                   <div className="text-xl text-white/60">
@@ -2375,7 +2434,7 @@ export default function App() {
 
               {/* Grid de productos */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortedGroups.map((group) => (
+                {sortedGroupsForView.map((group) => (
                   <div
                     key={group.type}
                     className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl border border-white/30 rounded-2xl shadow-2xl p-6 hover:scale-105 hover:shadow-green-500/20 transition-all duration-300"
@@ -2433,7 +2492,7 @@ export default function App() {
           {/* Vista por fecha */}
           {inventoryView === "byDate" && (
             <div className="w-full max-w-6xl space-y-8 pb-8">
-              {sortedByDate.length === 0 && (
+              {sortedByDateForView.length === 0 && (
                 <div className="text-center py-20">
                   <div className="text-6xl mb-4">📅</div>
                   <div className="text-xl text-white/60">
@@ -2444,7 +2503,7 @@ export default function App() {
                 </div>
               )}
 
-              {sortedByDate.map((dateGroup) => (
+              {sortedByDateForView.map((dateGroup) => (
                 <div
                   key={dateGroup.date}
                   className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/30 rounded-2xl shadow-2xl overflow-hidden"
@@ -2611,8 +2670,8 @@ export default function App() {
                     </h2>
                     <p className="text-white/60">
                       {language === "es"
-                        ? "Lista completa del inventario"
-                        : "Complete inventory list"}
+                        ? userRole === "plant" ? "Productos que yo creé" : "Lista completa del inventario"
+                        : userRole === "plant" ? "Products I created" : "Complete inventory list"}
                     </p>
                   </div>
                   <div className="bg-gradient-to-br from-green-500/20 to-emerald-600/20 px-6 py-4 rounded-xl border border-green-400/30">
@@ -2620,7 +2679,7 @@ export default function App() {
                       {language === "es" ? "Total" : "Total"}
                     </div>
                     <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500">
-                      {inventory.length}
+                      {filteredInventoryForPlant.length}
                       <span className="text-xl text-white/80 ml-2">
                         {language === "es" ? "pzs" : "pcs"}
                       </span>
@@ -2629,7 +2688,7 @@ export default function App() {
                 </div>
               </div>
 
-              {inventory.length === 0 && (
+              {filteredInventoryForPlant.length === 0 && (
                 <div className="text-center py-20">
                   <div className="text-6xl mb-4">📦</div>
                   <div className="text-xl text-white/60">
@@ -2642,7 +2701,7 @@ export default function App() {
 
               {/* Lista de productos */}
               <div className="space-y-3">
-                {inventory
+                {filteredInventoryForPlant
                   .slice()
                   .sort((a, b) => new Date(b.date) - new Date(a.date))
                   .map((item, index) => (
@@ -3763,8 +3822,14 @@ export default function App() {
               <span className="text-xl">⚙️</span>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white">{language === "es" ? "Procesamiento" : "Processing"}</h1>
-              <p className="text-xs text-[#d4a574]">{language === "es" ? "Cortes de carne disponibles" : "Available meat cuts"}</p>
+              <h1 className="text-lg font-bold text-white">
+                {language === "es" ? "Procesamiento" : "Processing"}
+              </h1>
+              <p className="text-xs text-[#d4a574]">
+                {language === "es"
+                  ? "Cortes de carne disponibles"
+                  : "Available meat cuts"}
+              </p>
             </div>
           </div>
           <nav className="flex items-center gap-4">
@@ -3810,7 +3875,8 @@ export default function App() {
                   {primal}
                 </h3>
                 <p className="text-xs text-[#d4a574]/70">
-                  {cuts.length} {language === "es" ? "cortes disponibles" : "available cuts"}
+                  {cuts.length}{" "}
+                  {language === "es" ? "cortes disponibles" : "available cuts"}
                 </p>
               </button>
             );
@@ -3840,7 +3906,9 @@ export default function App() {
                   </h2>
                   <p className="text-sm text-[#d4a574]">
                     {PROCESSING_PRIMALS[selectedProcessingPrimal].length}{" "}
-                    {language === "es" ? "cortes disponibles" : "available cuts"}
+                    {language === "es"
+                      ? "cortes disponibles"
+                      : "available cuts"}
                   </p>
                 </div>
               </div>
@@ -3848,8 +3916,18 @@ export default function App() {
                 onClick={() => setSelectedProcessingPrimal(null)}
                 className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -3857,22 +3935,25 @@ export default function App() {
             {/* Lista elegante de cortes */}
             <div className="p-6 overflow-y-auto max-h-[calc(85vh-120px)]">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {PROCESSING_PRIMALS[selectedProcessingPrimal].map((corte, idx) => (
-                  <div
-                    key={corte}
-                    className="flex items-center gap-2 bg-[#5a4a3a]/40 border border-[#8b7355]/30 rounded-lg px-3 py-2.5 hover:border-[#d4a574]/50 hover:bg-[#5a4a3a]/60 transition-all"
-                  >
-                    <div className="w-7 h-7 bg-[#d4a574]/20 rounded-lg flex items-center justify-center text-[#d4a574] font-bold text-sm flex-shrink-0">
-                      {idx + 1}
+                {PROCESSING_PRIMALS[selectedProcessingPrimal].map(
+                  (corte, idx) => (
+                    <div
+                      key={corte}
+                      className="flex items-center gap-2 bg-[#5a4a3a]/40 border border-[#8b7355]/30 rounded-lg px-3 py-2.5 hover:border-[#d4a574]/50 hover:bg-[#5a4a3a]/60 transition-all"
+                    >
+                      <div className="w-7 h-7 bg-[#d4a574]/20 rounded-lg flex items-center justify-center text-[#d4a574] font-bold text-sm flex-shrink-0">
+                        {idx + 1}
+                      </div>
+                      <span className="text-white text-sm flex-1">{corte}</span>
                     </div>
-                    <span className="text-white text-sm flex-1">{corte}</span>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
 
               <div className="mt-6 p-4 bg-[#5a4a3a]/40 border border-[#8b7355]/30 rounded-xl">
                 <p className="text-sm text-[#d4a574]">
-                  💡 {language === "es" 
+                  💡{" "}
+                  {language === "es"
                     ? "Próximamente: registro de pesos y trazabilidad de cada corte"
                     : "Coming soon: weight tracking and traceability for each cut"}
                 </p>
