@@ -277,12 +277,7 @@ const PROCESSING_PRIMALS = {
   ],
   // Cerdo
   "Cerdo • Brazuelo": ["Blade", "Costilla", "Macisa", "Hock"],
-  "Cerdo • Lomo": [
-    "Chuletas",
-    "Lomo S/Hueso",
-    "Costilla",
-    "Pancita or Belly",
-  ],
+  "Cerdo • Lomo": ["Chuletas", "Lomo S/Hueso", "Costilla", "Pancita or Belly"],
   "Cerdo • Pierna": ["Colita", "Macisa", "Brisket", "Patas"],
   "Cerdo • Grasa": ["Grasa P/Vender", "Grasa para Manteca"],
 };
@@ -354,7 +349,8 @@ export default function App() {
   const [reportMonth, setReportMonth] = useState(""); // Mes seleccionado
   const [selectedProductGroup, setSelectedProductGroup] = useState(null); // Producto seleccionado en cooler detail
   const [selectedBatchForDiff, setSelectedBatchForDiff] = useState(null); // Lote seleccionado en vista de diferencias
-  const [selectedProcessingPrimal, setSelectedProcessingPrimal] = useState(null); // Primal seleccionado en procesamiento
+  const [selectedProcessingPrimal, setSelectedProcessingPrimal] =
+    useState(null); // Primal seleccionado en procesamiento
 
   // Traducciones
   const t = texts[language];
@@ -1534,209 +1530,221 @@ export default function App() {
   const renderMenu = () => {
     const showProcessing = userRole === "cooler" || userRole === "admin";
     return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#3b0d0d] via-[#2a0a0a] to-[#111827] text-white p-6">
-      <ToastContainer position="top-center" />
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#3b0d0d] via-[#2a0a0a] to-[#111827] text-white p-6">
+        <ToastContainer position="top-center" />
 
-      {/* Header */}
-      <div className="flex w-full max-w-5xl mx-auto justify-between items-center mb-8">
-        <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent">
-          {t.title}
-        </h1>
-        <div className="flex items-center gap-3">
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="bg-white/10 backdrop-blur-md text-white border border-white/30 rounded-full px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
-          >
-            <option value="en">🇺🇸 EN</option>
-            <option value="es">🇪🇸 ES</option>
-          </select>
-          <button
-            onClick={handleLogout}
-            className="bg-white/10 backdrop-blur-md hover:bg-white/20 border border-white/30 px-4 py-1.5 rounded-full text-sm font-semibold transition-all"
-          >
-            {t.logout}
-          </button>
-        </div>
-      </div>
-
-      {/* Botones del menú principal - estilo moderno compacto */}
-      <div className="flex-1 flex items-center justify-center">
-        <div className="grid grid-cols-2 gap-4 w-full max-w-2xl px-6">
-          {/* Ingreso de Inventario (Plant) */}
-          {(userRole === "plant" || userRole === "admin") && (
-            <button
-              onClick={() => setCurrentScreen("ingreso")}
-              className={`group relative bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20 ${
-                finishedBatches.length === 0 ? "col-span-2" : ""
-              }`}
+        {/* Header */}
+        <div className="flex w-full max-w-5xl mx-auto justify-between items-center mb-8">
+          <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent">
+            {t.title}
+          </h1>
+          <div className="flex items-center gap-3">
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-white/10 backdrop-blur-md text-white border border-white/30 rounded-full px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
             >
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-3xl">🥩</span>
-                <span className="text-base font-bold">{t.inventoryEntry}</span>
-              </div>
-              <div className="text-xs text-white/80 mt-1 text-center">
-                {t.inventoryEntryDesc}
-              </div>
+              <option value="en">🇺🇸 EN</option>
+              <option value="es">🇪🇸 ES</option>
+            </select>
+            <button
+              onClick={handleLogout}
+              className="bg-white/10 backdrop-blur-md hover:bg-white/20 border border-white/30 px-4 py-1.5 rounded-full text-sm font-semibold transition-all"
+            >
+              {t.logout}
             </button>
-          )}
+          </div>
+        </div>
 
-          {/* Avisar a Roberto (Solo si hay lotes finalizados) */}
-          {(userRole === "plant" || userRole === "admin") &&
-            finishedBatches.length > 0 && (
+        {/* Botones del menú principal - estilo moderno compacto */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="grid grid-cols-2 gap-4 w-full max-w-2xl px-6">
+            {/* Ingreso de Inventario (Plant) */}
+            {(userRole === "plant" || userRole === "admin") && (
               <button
-                onClick={() => {
-                  // Crear mensaje con todos los lotes finalizados
-                  const batchesSummary = finishedBatches
-                    .map((batch) => {
-                      const productSummary = batch.items
-                        .map(
-                          (item, idx) =>
-                            `${idx + 1}. ${item.type} - ${item.weight} lb`
-                        )
-                        .join("\n");
-
-                      return `📦 *Lote: ${batch.batchNumber}*\n🥩 *Productos (${
-                        batch.items.length
-                      }):*\n${productSummary}\n⚖️ *Peso: ${batch.totalWeight.toFixed(
-                        2
-                      )} lb*`;
-                    })
-                    .join("\n\n");
-
-                  const totalWeightAllBatches = finishedBatches.reduce(
-                    (sum, batch) => sum + batch.totalWeight,
-                    0
-                  );
-
-                  const message = encodeURIComponent(
-                    language === "es"
-                      ? `Hola Roberto, ya estoy en la 501 Mersea Rd 5 esperando a ser descargada.\n\n${batchesSummary}\n\n🔢 *Total de Lotes: ${
-                          finishedBatches.length
-                        }*\n⚖️ *Peso Total General: ${totalWeightAllBatches.toFixed(
-                          2
-                        )} lb*\n\n- Helen`
-                      : `Hi Roberto, I'm at 501 Mersea Rd 5 waiting to be unloaded.\n\n${batchesSummary}\n\n🔢 *Total Batches: ${
-                          finishedBatches.length
-                        }*\n⚖️ *Total Weight: ${totalWeightAllBatches.toFixed(
-                          2
-                        )} lb*\n\n- Helen`
-                  );
-
-                  window.open(
-                    `https://wa.me/${ROBERTO_WHATSAPP}?text=${message}`,
-                    "_blank"
-                  );
-
-                  toast.success(t.whatsappSent);
-
-                  // Limpiar lotes finalizados después de enviar
-                  setFinishedBatches([]);
-                }}
-                className="group relative bg-gradient-to-br from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
+                onClick={() => setCurrentScreen("ingreso")}
+                className={`group relative bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20 ${
+                  finishedBatches.length === 0 ? "col-span-2" : ""
+                }`}
               >
                 <div className="flex items-center justify-center gap-3">
-                  <span className="text-3xl">📱</span>
-                  <span className="text-base font-bold">{t.notifyRoberto}</span>
+                  <span className="text-3xl">🥩</span>
+                  <span className="text-base font-bold">
+                    {t.inventoryEntry}
+                  </span>
                 </div>
                 <div className="text-xs text-white/80 mt-1 text-center">
-                  {finishedBatches.length}{" "}
-                  {language === "es"
-                    ? finishedBatches.length === 1
-                      ? "lote listo"
-                      : "lotes listos"
-                    : finishedBatches.length === 1
-                    ? "batch ready"
-                    : "batches ready"}
+                  {t.inventoryEntryDesc}
                 </div>
               </button>
             )}
 
-          {/* Ingreso a Cooler (Cooler) */}
-          {(userRole === "cooler" || userRole === "admin") && (
-            <button
-              onClick={() => setCurrentScreen("coolerIntake")}
-              className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-3xl">🧊</span>
-                <span className="text-base font-bold">{t.coolerIntake}</span>
-              </div>
-              <div className="text-xs text-white/80 mt-1 text-center">
-                {t.coolerIntakeDesc2}
-              </div>
-            </button>
-          )}
+            {/* Avisar a Roberto (Solo si hay lotes finalizados) */}
+            {(userRole === "plant" || userRole === "admin") &&
+              finishedBatches.length > 0 && (
+                <button
+                  onClick={() => {
+                    // Crear mensaje con todos los lotes finalizados
+                    const batchesSummary = finishedBatches
+                      .map((batch) => {
+                        const productSummary = batch.items
+                          .map(
+                            (item, idx) =>
+                              `${idx + 1}. ${item.type} - ${item.weight} lb`
+                          )
+                          .join("\n");
 
-          {/* Retiro / Asignación (Dispatch) */}
-          {(userRole === "dispatch" || userRole === "admin") && (
-            <button
-              onClick={() => setCurrentScreen("retiro")}
-              className="group relative bg-gradient-to-br from-fuchsia-500 to-pink-600 hover:from-fuchsia-400 hover:to-pink-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-3xl">🚚</span>
-                <span className="text-base font-bold">{t.dispatchAssign}</span>
-              </div>
-              <div className="text-xs text-white/80 mt-1 text-center">
-                {t.dispatchAssignDesc}
-              </div>
-            </button>
-          )}
+                        return `📦 *Lote: ${
+                          batch.batchNumber
+                        }*\n🥩 *Productos (${
+                          batch.items.length
+                        }):*\n${productSummary}\n⚖️ *Peso: ${batch.totalWeight.toFixed(
+                          2
+                        )} lb*`;
+                      })
+                      .join("\n\n");
 
-          {/* Recepción en Tienda (Store) */}
-          {(userRole === "store" || userRole === "admin") && (
-            <button
-              onClick={() => setCurrentScreen("recepcion")}
-              className="group relative bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-3xl">🏪</span>
-                <span className="text-base font-bold">{t.storeReception}</span>
-              </div>
-              <div className="text-xs text-white/80 mt-1 text-center">
-                {t.storeReceptionDesc}
-              </div>
-            </button>
-          )}
+                    const totalWeightAllBatches = finishedBatches.reduce(
+                      (sum, batch) => sum + batch.totalWeight,
+                      0
+                    );
 
-          {/* Ver Inventario (Solo cooler, dispatch, store, admin - NO plant) */}
-          {(userRole === "cooler" ||
-            userRole === "dispatch" ||
-            userRole === "store" ||
-            userRole === "admin") && (
-            <button
-              onClick={() => setCurrentScreen("inventario")}
-              className={`group relative bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20 ${showProcessing ? "" : "col-span-2"}`}
-            >
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-3xl">📊</span>
-                <span className="text-base font-bold">{t.viewInventory}</span>
-              </div>
-              <div className="text-xs text-white/80 mt-1 text-center">
-                {t.viewInventoryDesc}
-              </div>
-            </button>
-          )}
-          {/* Procesamiento (Cooler / Admin) */}
-          {(userRole === "cooler" || userRole === "admin") && (
-            <button
-              onClick={() => setCurrentScreen("processing")}
-              className="group relative bg-gradient-to-br from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-3xl">⚙️</span>
-                <span className="text-base font-bold">{t.processing}</span>
-              </div>
-              <div className="text-xs text-white/80 mt-1 text-center">
-                {t.processingDesc}
-              </div>
-            </button>
-          )}
+                    const message = encodeURIComponent(
+                      language === "es"
+                        ? `Hola Roberto, ya estoy en la 501 Mersea Rd 5 esperando a ser descargada.\n\n${batchesSummary}\n\n🔢 *Total de Lotes: ${
+                            finishedBatches.length
+                          }*\n⚖️ *Peso Total General: ${totalWeightAllBatches.toFixed(
+                            2
+                          )} lb*\n\n- Helen`
+                        : `Hi Roberto, I'm at 501 Mersea Rd 5 waiting to be unloaded.\n\n${batchesSummary}\n\n🔢 *Total Batches: ${
+                            finishedBatches.length
+                          }*\n⚖️ *Total Weight: ${totalWeightAllBatches.toFixed(
+                            2
+                          )} lb*\n\n- Helen`
+                    );
+
+                    window.open(
+                      `https://wa.me/${ROBERTO_WHATSAPP}?text=${message}`,
+                      "_blank"
+                    );
+
+                    toast.success(t.whatsappSent);
+
+                    // Limpiar lotes finalizados después de enviar
+                    setFinishedBatches([]);
+                  }}
+                  className="group relative bg-gradient-to-br from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
+                >
+                  <div className="flex items-center justify-center gap-3">
+                    <span className="text-3xl">📱</span>
+                    <span className="text-base font-bold">
+                      {t.notifyRoberto}
+                    </span>
+                  </div>
+                  <div className="text-xs text-white/80 mt-1 text-center">
+                    {finishedBatches.length}{" "}
+                    {language === "es"
+                      ? finishedBatches.length === 1
+                        ? "lote listo"
+                        : "lotes listos"
+                      : finishedBatches.length === 1
+                      ? "batch ready"
+                      : "batches ready"}
+                  </div>
+                </button>
+              )}
+
+            {/* Ingreso a Cooler (Cooler) */}
+            {(userRole === "cooler" || userRole === "admin") && (
+              <button
+                onClick={() => setCurrentScreen("coolerIntake")}
+                className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-3xl">🧊</span>
+                  <span className="text-base font-bold">{t.coolerIntake}</span>
+                </div>
+                <div className="text-xs text-white/80 mt-1 text-center">
+                  {t.coolerIntakeDesc2}
+                </div>
+              </button>
+            )}
+
+            {/* Retiro / Asignación (Dispatch) */}
+            {(userRole === "dispatch" || userRole === "admin") && (
+              <button
+                onClick={() => setCurrentScreen("retiro")}
+                className="group relative bg-gradient-to-br from-fuchsia-500 to-pink-600 hover:from-fuchsia-400 hover:to-pink-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-3xl">🚚</span>
+                  <span className="text-base font-bold">
+                    {t.dispatchAssign}
+                  </span>
+                </div>
+                <div className="text-xs text-white/80 mt-1 text-center">
+                  {t.dispatchAssignDesc}
+                </div>
+              </button>
+            )}
+
+            {/* Recepción en Tienda (Store) */}
+            {(userRole === "store" || userRole === "admin") && (
+              <button
+                onClick={() => setCurrentScreen("recepcion")}
+                className="group relative bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-3xl">🏪</span>
+                  <span className="text-base font-bold">
+                    {t.storeReception}
+                  </span>
+                </div>
+                <div className="text-xs text-white/80 mt-1 text-center">
+                  {t.storeReceptionDesc}
+                </div>
+              </button>
+            )}
+
+            {/* Ver Inventario (Solo cooler, dispatch, store, admin - NO plant) */}
+            {(userRole === "cooler" ||
+              userRole === "dispatch" ||
+              userRole === "store" ||
+              userRole === "admin") && (
+              <button
+                onClick={() => setCurrentScreen("inventario")}
+                className={`group relative bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20 ${
+                  showProcessing ? "" : "col-span-2"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-3xl">📊</span>
+                  <span className="text-base font-bold">{t.viewInventory}</span>
+                </div>
+                <div className="text-xs text-white/80 mt-1 text-center">
+                  {t.viewInventoryDesc}
+                </div>
+              </button>
+            )}
+            {/* Procesamiento (Cooler / Admin) */}
+            {(userRole === "cooler" || userRole === "admin") && (
+              <button
+                onClick={() => setCurrentScreen("processing")}
+                className="group relative bg-gradient-to-br from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-3xl">⚙️</span>
+                  <span className="text-base font-bold">{t.processing}</span>
+                </div>
+                <div className="text-xs text-white/80 mt-1 text-center">
+                  {t.processingDesc}
+                </div>
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
   };
 
   // Renderizar pantalla de ingreso
@@ -3735,105 +3743,158 @@ export default function App() {
 
   // Vista de Procesamiento de Carne
   const renderProcessing = () => (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#3b0d0d] via-[#2a0a0a] to-[#111827] text-white p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       <ToastContainer position="top-center" />
-      {/* Header */}
-      <div className="flex w-full max-w-5xl mx-auto justify-between items-center mb-8">
-        <button
-          onClick={() => setCurrentScreen("menu")}
-          className="bg-gray-700 hover:bg-gray-800 px-4 py-2 rounded"
-        >
-          ← {language === "es" ? "Volver" : "Back"}
-        </button>
-        <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-3">
-          <span>⚙️</span>
-          {language === "es" ? "Procesamiento" : "Processing"}
-        </h1>
-        <button
-          onClick={handleLogout}
-          className="bg-gray-700 hover:bg-gray-800 px-3 py-1 rounded"
-        >
-          {t.logout}
-        </button>
-      </div>
-
-      {/* Intro */}
-      <div className="max-w-5xl mx-auto mb-6 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
-        <p className="text-white/70 text-sm leading-relaxed">
-          {language === "es"
-            ? "Esta sección lista los cortes disponibles que se generan de cada primal después de la recepción en el cooler. Próximamente aquí se podrá registrar los pesos generados y trazabilidad de cada corte."
-            : "This section lists available cuts produced from each primal after cooler intake. Soon you will be able to record generated weights and traceability for each cut here."}
-        </p>
-      </div>
-
-      {/* Grid de primales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto pb-12">
-        {Object.entries(PROCESSING_PRIMALS).map(([primal, cuts]) => {
-          const isOpen = selectedProcessingPrimal === primal;
-          return (
-            <div
-              key={primal}
-              className={`relative group bg-gradient-to-br from-yellow-900/30 to-orange-950/30 border border-yellow-600/30 rounded-2xl shadow-xl hover:shadow-amber-500/30 transition-all duration-300 backdrop-blur-xl overflow-hidden ${
-                isOpen ? "ring-2 ring-amber-400" : ""
-              }`}
-            >
-              <button
-                onClick={() =>
-                  setSelectedProcessingPrimal(
-                    isOpen ? null : primal
-                  )
-                }
-                className="w-full text-left p-6 flex flex-col gap-2"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl">🥩</span>
-                    <h2 className="text-lg font-bold tracking-wide">
-                      {primal}
-                    </h2>
-                  </div>
-                  <span className="text-sm text-amber-300 font-semibold bg-amber-500/10 px-3 py-1 rounded-full border border-amber-400/20">
-                    {cuts.length} {language === "es" ? "cortes" : "cuts"}
-                  </span>
-                </div>
-                <div className="text-xs text-white/60">
-                  {language === "es"
-                    ? isOpen
-                      ? "Clic para cerrar"
-                      : "Clic para ver cortes"
-                    : isOpen
-                    ? "Click to collapse"
-                    : "Click to view cuts"}
-                </div>
-              </button>
-              {isOpen && (
-                <div className="px-6 pb-6 -mt-2">
-                  <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-2">
-                    {cuts.map((corte) => (
-                      <div
-                        key={corte}
-                        className="flex items-center justify-between bg-black/20 border border-amber-500/20 rounded-lg px-3 py-2 text-sm"
-                      >
-                        <span className="text-white/90 truncate">
-                          {corte}
-                        </span>
-                        <span className="text-white/40 text-[10px] uppercase tracking-wide">
-                          {language === "es" ? "Corte" : "Cut"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 text-center text-[11px] text-white/40">
-                    {language === "es"
-                      ? "(Próximo: registrar pesos y trazabilidad)"
-                      : "(Coming soon: record weights & traceability)"}
-                  </div>
-                </div>
-              )}
+      
+      {/* Header con logo y navegación */}
+      <header className="border-b border-gray-700 bg-gray-900/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center">
+              <span className="text-2xl">🥩</span>
             </div>
-          );
-        })}
-      </div>
+            <div>
+              <h1 className="text-xl font-bold text-white">
+                {language === "es" ? "Ordoñez Cattle Farms" : "Ordoñez Cattle Farms"}
+              </h1>
+              <p className="text-xs text-amber-500">
+                {language === "es" ? "Desde el corazón ganadero de Honduras" : "From the heart of Honduras cattle country"}
+              </p>
+            </div>
+          </div>
+          <nav className="flex items-center gap-6">
+            <button
+              onClick={() => setCurrentScreen("menu")}
+              className="text-sm text-gray-400 hover:text-amber-500 transition-colors"
+            >
+              {language === "es" ? "Inicio" : "Home"}
+            </button>
+            <button className="text-sm text-amber-500 font-semibold border-b-2 border-amber-500 pb-1">
+              {language === "es" ? "Menú" : "Menu"}
+            </button>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-gray-400 hover:text-amber-500 transition-colors"
+            >
+              {t.logout}
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      {/* Contenido principal */}
+      <main className="max-w-7xl mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Object.entries(PROCESSING_PRIMALS).map(([primal, cuts]) => {
+            // Determinar el icono según el primal
+            let icon = "🥩";
+            if (primal.includes("Rib Eye")) icon = "🥩";
+            else if (primal.includes("T-Bone")) icon = "🥩";
+            else if (primal.includes("Pierna")) icon = "🦵";
+            else if (primal.includes("Brazuelo")) icon = "💪";
+            else if (primal.includes("Lomo")) icon = "🥩";
+            else if (primal.includes("Grasa")) icon = "🧈";
+
+            return (
+              <div
+                key={primal}
+                onClick={() => setSelectedProcessingPrimal(primal)}
+                className="group relative bg-gray-800/50 border border-gray-700 rounded-2xl p-6 hover:border-amber-500/50 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer"
+              >
+                {/* Icono */}
+                <div className="mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-amber-500/20 to-orange-600/20 rounded-xl flex items-center justify-center">
+                    <span className="text-4xl">{icon}</span>
+                  </div>
+                </div>
+
+                {/* Título */}
+                <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-amber-400 transition-colors">
+                  {primal}
+                </h2>
+
+                {/* Subtítulo */}
+                <p className="text-sm text-amber-500/80 mb-4">
+                  {cuts.length} {language === "es" ? "cortes disponibles" : "available cuts"}
+                </p>
+
+                {/* Indicador de hover */}
+                <div className="absolute bottom-4 right-4 text-gray-600 group-hover:text-amber-500 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </main>
+
+      {/* Modal de detalles del primal */}
+      {selectedProcessingPrimal && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+          onClick={() => setSelectedProcessingPrimal(null)}
+        >
+          <div
+            className="bg-gray-800 border border-gray-700 rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header del modal */}
+            <div className="bg-gradient-to-r from-amber-600 to-orange-600 px-8 py-6 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+                  <span className="text-4xl">🥩</span>
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-white">
+                    {selectedProcessingPrimal}
+                  </h2>
+                  <p className="text-amber-100">
+                    {PROCESSING_PRIMALS[selectedProcessingPrimal].length}{" "}
+                    {language === "es" ? "cortes disponibles" : "available cuts"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedProcessingPrimal(null)}
+                className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Lista de cortes */}
+            <div className="p-8 overflow-y-auto max-h-[calc(80vh-140px)]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {PROCESSING_PRIMALS[selectedProcessingPrimal].map((corte, idx) => (
+                  <div
+                    key={corte}
+                    className="bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-3 hover:border-amber-500/50 hover:bg-gray-900/80 transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-500 font-bold text-sm">
+                        {idx + 1}
+                      </div>
+                      <span className="text-white font-medium flex-1">{corte}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-8 p-4 bg-blue-900/20 border border-blue-500/30 rounded-xl">
+                <p className="text-sm text-blue-300">
+                  💡 {language === "es" 
+                    ? "Próximamente podrás registrar pesos y trazabilidad de cada corte"
+                    : "Coming soon: record weights and traceability for each cut"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
