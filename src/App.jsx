@@ -1530,52 +1530,59 @@ export default function App() {
   const renderMenu = () => {
     const showProcessing = userRole === "cooler" || userRole === "admin";
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#3b0d0d] via-[#2a0a0a] to-[#111827] text-white p-6">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#4a3f35] via-[#3d3228] to-[#2d2318] text-white">
         <ToastContainer position="top-center" />
 
-        {/* Header */}
-        <div className="flex w-full max-w-5xl mx-auto justify-between items-center mb-8">
-          <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent">
-            {t.title}
-          </h1>
-          <div className="flex items-center gap-3">
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="bg-white/10 backdrop-blur-md text-white border border-white/30 rounded-full px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
-            >
-              <option value="en">🇺🇸 EN</option>
-              <option value="es">🇪🇸 ES</option>
-            </select>
-            <button
-              onClick={handleLogout}
-              className="bg-white/10 backdrop-blur-md hover:bg-white/20 border border-white/30 px-4 py-1.5 rounded-full text-sm font-semibold transition-all"
-            >
-              {t.logout}
-            </button>
+        {/* Header elegante */}
+        <header className="w-full bg-[#5a4a3a]/50 backdrop-blur-sm border-b border-[#8b7355]/20">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#d4a574] rounded-full flex items-center justify-center">
+                <span className="text-xl">🐄</span>
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-white">Ordoñez Cattle Farms</h1>
+                <p className="text-xs text-[#d4a574]">Desde el corazón ganadero de Honduras</p>
+              </div>
+            </div>
+            <nav className="flex items-center gap-4">
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="bg-[#3d3228] text-white border border-[#8b7355]/30 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d4a574]/50"
+              >
+                <option value="en">🇺🇸 EN</option>
+                <option value="es">🇪🇸 ES</option>
+              </select>
+              <button
+                onClick={handleLogout}
+                className="text-sm text-gray-300 hover:text-[#d4a574] transition-colors"
+              >
+                {t.logout}
+              </button>
+            </nav>
           </div>
-        </div>
+        </header>
 
-        {/* Botones del menú principal - estilo moderno compacto */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="grid grid-cols-2 gap-4 w-full max-w-2xl px-6">
+        {/* Grid de opciones del menú - estilo elegante */}
+        <main className="flex-1 flex items-center justify-center p-6">
+          <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            
             {/* Ingreso de Inventario (Plant) */}
             {(userRole === "plant" || userRole === "admin") && (
               <button
                 onClick={() => setCurrentScreen("ingreso")}
-                className={`group relative bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20 ${
-                  finishedBatches.length === 0 ? "col-span-2" : ""
-                }`}
+                className="group bg-[#5a4a3a]/60 hover:bg-[#6a5a4a]/70 border border-[#8b7355]/30 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 text-left"
               >
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-3xl">🥩</span>
-                  <span className="text-base font-bold">
-                    {t.inventoryEntry}
-                  </span>
+                <div className="mb-4">
+                  <span className="text-5xl">🥩</span>
                 </div>
-                <div className="text-xs text-white/80 mt-1 text-center">
+                <h2 className="text-xl font-bold text-white mb-2 group-hover:text-[#d4a574] transition-colors">
+                  {t.inventoryEntry}
+                </h2>
+                <p className="text-sm text-[#d4a574]/80">
                   {t.inventoryEntryDesc}
-                </div>
+                </p>
               </button>
             )}
 
@@ -1584,7 +1591,6 @@ export default function App() {
               finishedBatches.length > 0 && (
                 <button
                   onClick={() => {
-                    // Crear mensaje con todos los lotes finalizados
                     const batchesSummary = finishedBatches
                       .map((batch) => {
                         const productSummary = batch.items
@@ -1629,19 +1635,17 @@ export default function App() {
                     );
 
                     toast.success(t.whatsappSent);
-
-                    // Limpiar lotes finalizados después de enviar
                     setFinishedBatches([]);
                   }}
-                  className="group relative bg-gradient-to-br from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
+                  className="group bg-[#5a4a3a]/60 hover:bg-[#6a5a4a]/70 border border-[#8b7355]/30 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 text-left"
                 >
-                  <div className="flex items-center justify-center gap-3">
-                    <span className="text-3xl">📱</span>
-                    <span className="text-base font-bold">
-                      {t.notifyRoberto}
-                    </span>
+                  <div className="mb-4">
+                    <span className="text-5xl">📱</span>
                   </div>
-                  <div className="text-xs text-white/80 mt-1 text-center">
+                  <h2 className="text-xl font-bold text-white mb-2 group-hover:text-[#d4a574] transition-colors">
+                    {t.notifyRoberto}
+                  </h2>
+                  <p className="text-sm text-[#d4a574]/80">
                     {finishedBatches.length}{" "}
                     {language === "es"
                       ? finishedBatches.length === 1
@@ -1650,7 +1654,7 @@ export default function App() {
                       : finishedBatches.length === 1
                       ? "batch ready"
                       : "batches ready"}
-                  </div>
+                  </p>
                 </button>
               )}
 
@@ -1658,15 +1662,17 @@ export default function App() {
             {(userRole === "cooler" || userRole === "admin") && (
               <button
                 onClick={() => setCurrentScreen("coolerIntake")}
-                className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
+                className="group bg-[#5a4a3a]/60 hover:bg-[#6a5a4a]/70 border border-[#8b7355]/30 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 text-left"
               >
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-3xl">🧊</span>
-                  <span className="text-base font-bold">{t.coolerIntake}</span>
+                <div className="mb-4">
+                  <span className="text-5xl">🧊</span>
                 </div>
-                <div className="text-xs text-white/80 mt-1 text-center">
+                <h2 className="text-xl font-bold text-white mb-2 group-hover:text-[#d4a574] transition-colors">
+                  {t.coolerIntake}
+                </h2>
+                <p className="text-sm text-[#d4a574]/80">
                   {t.coolerIntakeDesc2}
-                </div>
+                </p>
               </button>
             )}
 
@@ -1674,17 +1680,17 @@ export default function App() {
             {(userRole === "dispatch" || userRole === "admin") && (
               <button
                 onClick={() => setCurrentScreen("retiro")}
-                className="group relative bg-gradient-to-br from-fuchsia-500 to-pink-600 hover:from-fuchsia-400 hover:to-pink-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
+                className="group bg-[#5a4a3a]/60 hover:bg-[#6a5a4a]/70 border border-[#8b7355]/30 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 text-left"
               >
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-3xl">🚚</span>
-                  <span className="text-base font-bold">
-                    {t.dispatchAssign}
-                  </span>
+                <div className="mb-4">
+                  <span className="text-5xl">🚚</span>
                 </div>
-                <div className="text-xs text-white/80 mt-1 text-center">
+                <h2 className="text-xl font-bold text-white mb-2 group-hover:text-[#d4a574] transition-colors">
+                  {t.dispatchAssign}
+                </h2>
+                <p className="text-sm text-[#d4a574]/80">
                   {t.dispatchAssignDesc}
-                </div>
+                </p>
               </button>
             )}
 
@@ -1692,17 +1698,17 @@ export default function App() {
             {(userRole === "store" || userRole === "admin") && (
               <button
                 onClick={() => setCurrentScreen("recepcion")}
-                className="group relative bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
+                className="group bg-[#5a4a3a]/60 hover:bg-[#6a5a4a]/70 border border-[#8b7355]/30 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 text-left"
               >
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-3xl">🏪</span>
-                  <span className="text-base font-bold">
-                    {t.storeReception}
-                  </span>
+                <div className="mb-4">
+                  <span className="text-5xl">🏪</span>
                 </div>
-                <div className="text-xs text-white/80 mt-1 text-center">
+                <h2 className="text-xl font-bold text-white mb-2 group-hover:text-[#d4a574] transition-colors">
+                  {t.storeReception}
+                </h2>
+                <p className="text-sm text-[#d4a574]/80">
                   {t.storeReceptionDesc}
-                </div>
+                </p>
               </button>
             )}
 
@@ -1713,36 +1719,39 @@ export default function App() {
               userRole === "admin") && (
               <button
                 onClick={() => setCurrentScreen("inventario")}
-                className={`group relative bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20 ${
-                  showProcessing ? "" : "col-span-2"
-                }`}
+                className="group bg-[#5a4a3a]/60 hover:bg-[#6a5a4a]/70 border border-[#8b7355]/30 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 text-left"
               >
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-3xl">📊</span>
-                  <span className="text-base font-bold">{t.viewInventory}</span>
+                <div className="mb-4">
+                  <span className="text-5xl">📊</span>
                 </div>
-                <div className="text-xs text-white/80 mt-1 text-center">
+                <h2 className="text-xl font-bold text-white mb-2 group-hover:text-[#d4a574] transition-colors">
+                  {t.viewInventory}
+                </h2>
+                <p className="text-sm text-[#d4a574]/80">
                   {t.viewInventoryDesc}
-                </div>
+                </p>
               </button>
             )}
+
             {/* Procesamiento (Cooler / Admin) */}
             {(userRole === "cooler" || userRole === "admin") && (
               <button
                 onClick={() => setCurrentScreen("processing")}
-                className="group relative bg-gradient-to-br from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-white font-bold py-4 px-5 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-white/20"
+                className="group bg-[#5a4a3a]/60 hover:bg-[#6a5a4a]/70 border border-[#8b7355]/30 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 text-left"
               >
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-3xl">⚙️</span>
-                  <span className="text-base font-bold">{t.processing}</span>
+                <div className="mb-4">
+                  <span className="text-5xl">⚙️</span>
                 </div>
-                <div className="text-xs text-white/80 mt-1 text-center">
+                <h2 className="text-xl font-bold text-white mb-2 group-hover:text-[#d4a574] transition-colors">
+                  {t.processing}
+                </h2>
+                <p className="text-sm text-[#d4a574]/80">
                   {t.processingDesc}
-                </div>
+                </p>
               </button>
             )}
           </div>
-        </div>
+        </main>
       </div>
     );
   };
@@ -3743,32 +3752,41 @@ export default function App() {
 
   // Vista de Procesamiento de Carne
   const renderProcessing = () => (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#3b0d0d] via-[#2a0a0a] to-[#111827] text-white">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#4a3f35] via-[#3d3228] to-[#2d2318] text-white">
       <ToastContainer position="top-center" />
 
-      {/* Header compacto */}
-      <div className="flex w-full justify-between items-center px-4 py-2 bg-black/20 border-b border-amber-500/20">
-        <button
-          onClick={() => setCurrentScreen("menu")}
-          className="bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-xs transition-colors"
-        >
-          ← {language === "es" ? "Menú" : "Menu"}
-        </button>
-        <h1 className="text-base font-bold text-amber-400 flex items-center gap-1.5">
-          <span className="text-sm">⚙️</span>
-          {language === "es" ? "Procesamiento" : "Processing"}
-        </h1>
-        <button
-          onClick={handleLogout}
-          className="bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-xs transition-colors"
-        >
-          {t.logout}
-        </button>
-      </div>
+      {/* Header elegante */}
+      <header className="w-full bg-[#5a4a3a]/50 backdrop-blur-sm border-b border-[#8b7355]/20">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#d4a574] rounded-full flex items-center justify-center">
+              <span className="text-xl">⚙️</span>
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-white">{language === "es" ? "Procesamiento" : "Processing"}</h1>
+              <p className="text-xs text-[#d4a574]">{language === "es" ? "Cortes de carne disponibles" : "Available meat cuts"}</p>
+            </div>
+          </div>
+          <nav className="flex items-center gap-4">
+            <button
+              onClick={() => setCurrentScreen("menu")}
+              className="text-sm text-gray-300 hover:text-[#d4a574] transition-colors"
+            >
+              ← {language === "es" ? "Menú" : "Menu"}
+            </button>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-gray-300 hover:text-[#d4a574] transition-colors"
+            >
+              {t.logout}
+            </button>
+          </nav>
+        </div>
+      </header>
 
-      {/* Grid ultra compacto */}
-      <div className="flex-1 overflow-auto p-3">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+      {/* Grid de primales - estilo elegante */}
+      <main className="flex-1 overflow-auto p-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Object.entries(PROCESSING_PRIMALS).map(([primal, cuts]) => {
             // Determinar el icono según el primal
             let icon = "🥩";
@@ -3783,83 +3801,80 @@ export default function App() {
               <button
                 key={primal}
                 onClick={() => setSelectedProcessingPrimal(primal)}
-                className="group bg-gradient-to-br from-amber-900/20 to-orange-950/20 border border-amber-600/30 rounded p-2 hover:border-amber-500 hover:shadow-md hover:shadow-amber-500/20 transition-all text-left"
+                className="group bg-[#5a4a3a]/60 hover:bg-[#6a5a4a]/70 border border-[#8b7355]/30 rounded-2xl p-5 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 text-left"
               >
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-lg">{icon}</span>
-                  <h3 className="text-xs font-semibold text-white leading-tight group-hover:text-amber-300 transition-colors flex-1 min-w-0">
-                    {primal}
-                  </h3>
+                <div className="mb-3">
+                  <span className="text-4xl">{icon}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-amber-500/70">
-                    {cuts.length} {language === "es" ? "cortes" : "cuts"}
-                  </span>
-                  <svg className="w-3 h-3 text-gray-600 group-hover:text-amber-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
+                <h3 className="text-base font-bold text-white mb-1 group-hover:text-[#d4a574] transition-colors leading-tight">
+                  {primal}
+                </h3>
+                <p className="text-xs text-[#d4a574]/70">
+                  {cuts.length} {language === "es" ? "cortes disponibles" : "available cuts"}
+                </p>
               </button>
             );
           })}
         </div>
-      </div>
+      </main>
 
-      {/* Modal compacto */}
+      {/* Modal elegante */}
       {selectedProcessingPrimal && (
         <div
           className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedProcessingPrimal(null)}
         >
           <div
-            className="bg-gray-900 border border-amber-600/50 rounded-xl max-w-3xl w-full max-h-[85vh] overflow-hidden shadow-2xl"
+            className="bg-[#3d3228] border border-[#8b7355]/50 rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header compacto del modal */}
-            <div className="bg-gradient-to-r from-amber-600 to-orange-600 px-3 py-2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🥩</span>
+            {/* Header elegante del modal */}
+            <div className="bg-gradient-to-r from-[#5a4a3a] to-[#6a5a4a] px-6 py-4 flex items-center justify-between border-b border-[#8b7355]/30">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-[#d4a574]/20 rounded-xl flex items-center justify-center">
+                  <span className="text-3xl">🥩</span>
+                </div>
                 <div>
-                  <h2 className="text-sm font-bold text-white">
+                  <h2 className="text-xl font-bold text-white">
                     {selectedProcessingPrimal}
                   </h2>
-                  <p className="text-[10px] text-amber-100">
+                  <p className="text-sm text-[#d4a574]">
                     {PROCESSING_PRIMALS[selectedProcessingPrimal].length}{" "}
-                    {language === "es" ? "cortes" : "cuts"}
+                    {language === "es" ? "cortes disponibles" : "available cuts"}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedProcessingPrimal(null)}
-                className="text-white hover:bg-white/20 p-1 rounded transition-colors"
+                className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            {/* Lista compacta de cortes */}
-            <div className="p-3 overflow-y-auto max-h-[calc(85vh-80px)]">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1.5">
+            {/* Lista elegante de cortes */}
+            <div className="p-6 overflow-y-auto max-h-[calc(85vh-120px)]">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {PROCESSING_PRIMALS[selectedProcessingPrimal].map((corte, idx) => (
                   <div
                     key={corte}
-                    className="flex items-center gap-1.5 bg-black/30 border border-gray-700 rounded px-2 py-1.5 hover:border-amber-500/50 hover:bg-black/50 transition-all"
+                    className="flex items-center gap-2 bg-[#5a4a3a]/40 border border-[#8b7355]/30 rounded-lg px-3 py-2.5 hover:border-[#d4a574]/50 hover:bg-[#5a4a3a]/60 transition-all"
                   >
-                    <div className="w-5 h-5 bg-amber-500/10 rounded flex items-center justify-center text-amber-500 font-semibold text-[10px] flex-shrink-0">
+                    <div className="w-7 h-7 bg-[#d4a574]/20 rounded-lg flex items-center justify-center text-[#d4a574] font-bold text-sm flex-shrink-0">
                       {idx + 1}
                     </div>
-                    <span className="text-white/90 text-xs flex-1">{corte}</span>
+                    <span className="text-white text-sm flex-1">{corte}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-3 p-2 bg-blue-900/20 border border-blue-500/30 rounded">
-                <p className="text-[10px] text-blue-300">
+              <div className="mt-6 p-4 bg-[#5a4a3a]/40 border border-[#8b7355]/30 rounded-xl">
+                <p className="text-sm text-[#d4a574]">
                   💡 {language === "es" 
-                    ? "Próximamente: registro de pesos y trazabilidad"
-                    : "Coming soon: weight tracking and traceability"}
+                    ? "Próximamente: registro de pesos y trazabilidad de cada corte"
+                    : "Coming soon: weight tracking and traceability for each cut"}
                 </p>
               </div>
             </div>
